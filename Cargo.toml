@@ -1,0 +1,17 @@
+[package]
+name = "lights-xmit"
+version = "0.1.0"
+edition = "2021"
+authors = ["Matthew Moore <matt@moore-fam.com>"]
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+anyhow = "1.0.78"
+clap = { version="4.4.11", features = [ "derive" ] }
+env_logger = "0.10.1"
+linux-embedded-hal = "0.3.2"
+log = "0.4.20"
+midir = "0.9.1"
+rfm69 = "0.5.0"
+
