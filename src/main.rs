@@ -2,9 +2,17 @@ use std::path::PathBuf;
 use clap::{Parser, command};
 use log::debug;
 use midir::{MidiInput, MidiInputPort, MidiInputPorts};
+use packet::{Packet,PacketPayload,ShowPacket};
+use effect::Effect;
+    
+use radio::Radio;
+use types::Color;
 
+pub mod types;
 pub mod radio;
 pub mod midi;
+pub mod packet;
+pub mod effect;
 
 #[derive(Parser, Debug)]
 #[command(author, version)]
@@ -21,7 +29,13 @@ struct Cli {
     enumerate_midi: bool,
 
     #[arg(short, long, value_name = "PORT_NUM", help = "The MIDI port number to use, as returned from enumerate output.")]
-    midi_port: usize
+    midi_port: usize,
+
+    #[arg(short, long)]
+    address: u8,
+
+    #[arg(short, long)]
+    power: i8,
 }
 
 fn main() {
@@ -35,8 +49,26 @@ fn main() {
         midi_enum(&midi_in, &midi_in_ports);
         return;
     }
-    let radio = radio::radio_init().unwrap();
+    let mut radio = Radio::init(cli.address, cli.power).unwrap();
 
+    let all_on = Packet {
+        recipients: vec![],
+        payload: PacketPayload::Show(
+            ShowPacket {
+                effect: Effect::POP,
+                color: Color { hue: 0, saturation: 0, brightness: 255 },
+                attack: 0,
+                sustain: 255,
+                release: 0,
+                param1: 0,
+                param2: 0,
+                tempo: 0
+            })
+    };
+
+    radio.send(&all_on).unwrap();
+
+    /* 
     match midi_in_ports.get(cli.midi_port) {
         None => {
             eprintln!("Unknown midi port number specified: {}", cli.midi_port);
@@ -44,6 +76,7 @@ fn main() {
         }
         Some(p) => process_midi(&midi_in, &p)
     };
+    */
 }
 
 /// enumerate the midi ports available on the system
