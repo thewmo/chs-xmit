@@ -96,6 +96,7 @@ impl Radio {
         radio.node_address(NODE_ADDRESS)?;
         radio.preamble(PREAMBLE_LENGTH)?;
         radio.broadcast_address(0xFF)?;
+        radio.fifo_mode(rfm69::registers::FifoMode::NotEmpty)?;
 
         // rfm69 power is confusing, there are two power amps that can each be enabled/disabled
         // (or combined) and a "high power" mode from 18-20 dBm requiring enabling/disabling as
@@ -129,9 +130,8 @@ impl Radio {
         }
         let marshalled = packet.marshal(self.my_address, 0, 0);
         debug!("Sending packet: {:?}, marshalled: {:?}", packet, marshalled);
-        let result = self.radio.send(marshalled.as_slice());
-        debug!("Result was: {:?}", result);
-
+        self.radio.send(marshalled.as_slice())?;
+ 
         if high_power {
             self.radio.write(Registers::Ocp, 0x1A)?; // re-enables over-current protection
             self.radio.pa13_dbm1(Pa13dBm1::Normal)?;

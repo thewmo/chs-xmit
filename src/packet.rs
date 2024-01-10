@@ -32,9 +32,8 @@ impl ControlPacket {
 
 impl Packet {
     pub fn marshal(self: &Self, from_id: u8, packet_id: u8, flags: u8) -> Vec<u8> {
-        let mut buf = vec![64];
-        // the length, we'll go back and update this at the end
-        buf.push(0);
+        let mut buf = Vec::with_capacity(64);
+        buf.push(0); // we'll poke the length in here later
         // recipient address is next, this is either 255 for broadcast or a single receiver id
         buf.push(match self.recipients.len() {
             1 => self.recipients[0],
@@ -53,7 +52,8 @@ impl Packet {
                 buf.push(*r)
             }
         }
-        buf[0] = (buf.len()) as u8;
+        // update the head with the size
+        buf[0] = (buf.len() - 1) as u8;
         buf
     }
 }
