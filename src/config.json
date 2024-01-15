@@ -1,0 +1,10 @@
+{
+    "spi_device": "/dev/spidev0.1",
+    "frequency": 427000000,
+    "transmitter_id": 1,
+    "transmitter_power": 17,
+    "settle_time_millis": 10,
+    "midi_client_name": "chs-lights",
+    "midi_port": 0,
+    "show_file": "123"
+}

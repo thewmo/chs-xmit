@@ -1,5 +1,35 @@
 use crate::types::Color;
-use crate::effect::Effect;
+
+#[repr(u8)]
+#[derive(Debug,Copy,Clone)]
+pub enum EffectId {
+    Pop = 1,
+    Firecrackers = 2,
+    Chase = 3,
+    Strobe = 4,
+    BidiChase = 5,
+    OneShotChase = 6,
+    BidiOneShotChase = 7,
+    Sparkle = 8,
+    Wave = 9,
+    PiezoTrigger = 10,
+    Flame = 11,
+    Flame2 = 12,
+    Grass = 13,
+    CircularChase = 14,
+    BatteryTest = 15,
+    Rainbow = 16,
+}
+
+#[repr(u8)]
+#[derive(Debug,Copy,Clone)]
+pub enum Command {
+    SetGroup = 109,
+    SetLedCount = 110,
+    NewBrightness = 127,
+    NewTempo = 128,
+    Reset = 255
+}
 
 #[derive(Debug)]
 pub struct Packet {
@@ -15,7 +45,7 @@ pub enum PacketPayload {
 
 #[derive(Debug,Copy,Clone)]
 pub struct ControlPacket {
-    pub command_id: u8,
+    pub command_id: Command,
     pub param1: u8,
     pub param2: u8,
     pub request_reply: bool,
@@ -23,7 +53,8 @@ pub struct ControlPacket {
 
 impl ControlPacket {
     fn marshal(self: &Self, buf: &mut Vec<u8>) {
-        buf.push(self.command_id);
+        buf.push(0xFFu8); // "effect" value that tells the receiver this is a command
+        buf.push(self.command_id as u8);
         buf.push(self.param1);
         buf.push(self.param2);
         buf.push(if self.request_reply { 1 } else { 0 })
@@ -61,7 +92,7 @@ impl Packet {
 #[derive(Debug,Copy,Clone)]
 pub struct ShowPacket {
     // the effect to perform
-    pub effect: Effect,
+    pub effect: EffectId,
 
     // the color (will be sent as three bytes, hsv)
     pub color: Color,

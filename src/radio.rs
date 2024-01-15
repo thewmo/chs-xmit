@@ -1,6 +1,5 @@
 use log::debug;
 use std::thread::sleep;
-use std::time::Duration;
 use rfm69::{Rfm69, registers::{Registers, Modulation, ModulationShaping, 
     ModulationType, DataMode, PacketConfig, PacketFormat, 
     PacketDc, PacketFiltering, InterPacketRxDelay, RxBw, RxBwFsk,
@@ -8,7 +7,9 @@ use rfm69::{Rfm69, registers::{Registers, Modulation, ModulationShaping,
 use linux_embedded_hal::spidev::{SpiModeFlags, SpidevOptions};
 use linux_embedded_hal::sysfs_gpio::Direction;
 use linux_embedded_hal::{Spidev, SysfsPin};
+use std::time::Duration;
 
+use crate::config::ConfigFile;
 use crate::packet::Packet;
 
 // reference links
@@ -22,11 +23,12 @@ use crate::packet::Packet;
 // { CONFIG_GFSK, 0x00, 0x80, 0x10, 0x00, 0xe0, 0xe0, CONFIG_WHITE}, // GFSK_Rb250Fd250
 
 // rpi rf69 bonnet uses chip select CE1 (the ".1" suffix here)
-const SPI_DEVICE: &str = "/dev/spidev0.1";
+//const SPI_DEVICE: &str = "/dev/spidev0.1";
+
 // rpi rf69 bonnet connects reset to GPIO25
 const RESET_PIN: u64 = 25;
 
-const FREQ: u32 = 427_000_000; // 427 MHz
+//const FREQ: u32 = 427_000_000; // 427 MHz
 const BIT_RATE: u32 = 250_000; // 250 kbps
 const FREQ_DEVIATION: u32 = 250_000; // 250 kHz
 const PREAMBLE_LENGTH: u16 = 4;
@@ -47,8 +49,8 @@ const RX_BW: RxBw<RxBwFsk> = RxBw {
     dcc_cutoff: rfm69::registers::DccCutoff::Percent0dot125,
     rx_bw: RxBwFsk::Khz500dot0
 };
-const NODE_ADDRESS: u8 = 5;
-const SETTLE_TIME: Duration = Duration::from_millis(10); // time to let the radio settle between config changes/resets
+//const NODE_ADDRESS: u8 = 5;
+//const SETTLE_TIME: Duration = Duration::from_millis(10); // time to let the radio settle between config changes/resets
 
 type MyRfm = Rfm69<rfm69::NoCs, rfm69::SpiTransactional<Spidev>>;
 
@@ -59,7 +61,7 @@ pub struct Radio {
 }
 
 impl Radio {
-    pub fn init(my_address: u8, power: i8) -> Result<Radio, RadioError>  {
+    pub fn init(config: &ConfigFile) -> Result<Radio, RadioError>  {
 
         // the rfm69 bonnet pulls the reset pin high by
         // default, it needs to be pulled low to bring the radio
@@ -69,14 +71,15 @@ impl Radio {
 
         // this will configure the pin as output and high (placing the radio in reset)
         reset_pin.set_direction(Direction::High)?;
+        let settle_time = Duration::from_millis(config.settle_time_millis as u64);
         // let things stabilize for 10ms
-        sleep(SETTLE_TIME);
+        sleep(settle_time);
         // turn on the radio by taking reset low
         reset_pin.set_value(0)?;
         // and again before trying to configure the radio
-        sleep(SETTLE_TIME);
+        sleep(settle_time);
 
-        let mut spi = Spidev::open(SPI_DEVICE).unwrap();
+        let mut spi = Spidev::open(&config.spi_device)?;
         let options = SpidevOptions::new()
             .bits_per_word(8)
             .max_speed_hz(1_000_000)
@@ -87,13 +90,13 @@ impl Radio {
         let mut radio = Rfm69::new_without_cs(spi);
         radio.modulation(Modulation { ..MODULATION })?;
         radio.sync(SYNCWORD.as_bytes())?;
-        radio.frequency(FREQ)?;
+        radio.frequency(config.frequency)?;
         radio.bit_rate(BIT_RATE)?;
         radio.packet(PACKET_CONFIG)?;
         radio.fdev(FREQ_DEVIATION)?;
         radio.rx_bw(RX_BW)?;
         radio.rx_afc_bw(RX_BW)?;
-        radio.node_address(NODE_ADDRESS)?;
+        radio.node_address(config.transmitter_id)?;
         radio.preamble(PREAMBLE_LENGTH)?;
         radio.broadcast_address(0xFF)?;
         radio.fifo_mode(rfm69::registers::FifoMode::NotEmpty)?;
@@ -104,6 +107,7 @@ impl Radio {
         // good writeup at https://andrehessling.de/2015/02/07/figuring-out-the-power-level-settings-of-hoperfs-rfm69-hwhcw-modules/
         // tldr: If you use RFM69HW modules, enable PA1 (and only PA1!) for output powers less than +13 dBm. Combine PA1 and PA2 for powers 
         // between +13 dBm and +17 dBm. And only if you need more power, use PA1+PA2 with high power settings to get more than +17 dBm.
+        let power = config.transmitter_power;
         let pa_level: u8 = match power {
             -18..=13 => (power + 18) as u8 | 0x40, // 0x40 - PA1 only
             14..=17 => (power + 14) as u8 | 0x60, // 0x60 - PA1 + PA2 
@@ -118,21 +122,31 @@ impl Radio {
         for (index, val) in radio.read_all_regs()?.iter().enumerate() {
             debug!("Register 0x{:02x} = 0x{:02x}", index + 1, val);
         }
-        Ok(Radio { radio, my_address, power })
+        Ok(Radio { radio, 
+            my_address: config.transmitter_id, 
+            power })
     }
 
     pub fn send(self: &mut Self, packet: &Packet) -> Result<(),RadioError> {
-       let high_power = (18..=20).contains(&self.power);
-       if high_power {
+        self.pre_tx_hook()?;
+        let marshalled = packet.marshal(self.my_address, 0, 0);
+        debug!("Sending packet: {:?}, marshalled: {:?}", packet, marshalled);
+        let result = self.radio.send(marshalled.as_slice());
+        self.post_tx_hook()?;
+        result.map_err(From::from)
+    }
+
+    fn pre_tx_hook(self: &mut Self) -> Result<(),RadioError> {
+        if (18..=20).contains(&self.power) {
             self.radio.write(Registers::Ocp, 0x0F)?; // disables over-current protection
             self.radio.pa13_dbm1(Pa13dBm1::High20dBm)?;
             self.radio.pa13_dbm2(Pa13dBm2::High20dBm)?;
         }
-        let marshalled = packet.marshal(self.my_address, 0, 0);
-        debug!("Sending packet: {:?}, marshalled: {:?}", packet, marshalled);
-        self.radio.send(marshalled.as_slice())?;
- 
-        if high_power {
+        return Ok(())
+    }
+
+    fn post_tx_hook(self: &mut Self) -> Result<(),RadioError> {
+        if (18..=20).contains(&self.power) {
             self.radio.write(Registers::Ocp, 0x1A)?; // re-enables over-current protection
             self.radio.pa13_dbm1(Pa13dBm1::Normal)?;
             self.radio.pa13_dbm2(Pa13dBm2::Normal)?;
