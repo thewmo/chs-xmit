@@ -25,8 +25,8 @@ pub struct ConfigFile {
     pub transmitter_power: i8,
 
     /// amount of time to let the radio just be after
-    /// resets etc
-    pub settle_time_millis: usize,
+    /// resets etc, will use a default value if not supplied
+    pub settle_time_millis: Option<u64>,
 
     /// the client name to pass to the midi library
     pub midi_client_name: String,
@@ -36,7 +36,12 @@ pub struct ConfigFile {
     pub midi_port: String,
 
     /// the path to the show file to load on startup
-    pub show_file: String
+    pub show_file: String,
+
+    /// the depth of buffer to use on the internal channel between
+    /// the MIDI read thread and the main thread, will use a default
+    /// value if none supplied
+    pub channel_buf_depth: Option<usize>
 
 }
 

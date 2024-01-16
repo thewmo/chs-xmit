@@ -23,7 +23,7 @@ pub enum EffectId {
 
 #[repr(u8)]
 #[derive(Debug,Copy,Clone)]
-pub enum Command {
+pub enum CommandId {
     SetGroup = 109,
     SetLedCount = 110,
     NewBrightness = 127,
@@ -45,7 +45,7 @@ pub enum PacketPayload {
 
 #[derive(Debug,Copy,Clone)]
 pub struct ControlPacket {
-    pub command_id: Command,
+    pub command_id: CommandId,
     pub param1: u8,
     pub param2: u8,
     pub request_reply: bool,

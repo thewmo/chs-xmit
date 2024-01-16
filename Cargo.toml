@@ -17,4 +17,6 @@ midly = "0.5.3"
 rfm69 = "0.5.0"
 serde = { version = "1.0.195", features = ["derive"] }
 serde_json = "1.0.111"
+crossbeam-channel = "0.5.11"
+signal-hook = "0.3.17"
 

@@ -8,6 +8,7 @@ use linux_embedded_hal::spidev::{SpiModeFlags, SpidevOptions};
 use linux_embedded_hal::sysfs_gpio::Direction;
 use linux_embedded_hal::{Spidev, SysfsPin};
 use std::time::Duration;
+use std::fmt::{Display,Formatter};
 
 use crate::config::ConfigFile;
 use crate::packet::Packet;
@@ -33,6 +34,8 @@ const BIT_RATE: u32 = 250_000; // 250 kbps
 const FREQ_DEVIATION: u32 = 250_000; // 250 kHz
 const PREAMBLE_LENGTH: u16 = 4;
 const SYNCWORD: &str = "CHS";
+const DEFAULT_SETTLE_TIME: u64 = 10;
+
 const MODULATION: Modulation = Modulation { 
     data_mode: DataMode::Packet, 
     modulation_type: ModulationType::Fsk,
@@ -71,7 +74,7 @@ impl Radio {
 
         // this will configure the pin as output and high (placing the radio in reset)
         reset_pin.set_direction(Direction::High)?;
-        let settle_time = Duration::from_millis(config.settle_time_millis as u64);
+        let settle_time = Duration::from_millis(config.settle_time_millis.unwrap_or(DEFAULT_SETTLE_TIME));
         // let things stabilize for 10ms
         sleep(settle_time);
         // turn on the radio by taking reset low
@@ -156,6 +159,8 @@ impl Radio {
 
 }
 
+/// our own error type to wrap the underlying errors, not 
+/// all of which implement the standard error trait, frustratingly
 #[derive(Debug)]
 pub enum RadioError {   
     SysfsError(linux_embedded_hal::sysfs_gpio::Error),
@@ -201,3 +206,16 @@ impl From<std::io::Error> for RadioError {
         RadioError::SpiError(err)
     }
 }
+
+impl Display for RadioError {
+    fn fmt(self: &Self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match &self {
+            RadioError::SysfsError(e) => write!(f, "SysfsError: {:?}", e),
+            RadioError::Rfm69Error(e) => write!(f, "Rfm69Error: {:?}", e),
+            RadioError::SpiError(e) => write!(f, "SpiError: {:?}", e),
+            RadioError::IllegalPower => write!(f, "Unsupported power value specified")
+        }
+    }
+}
+
+impl std::error::Error for RadioError {}

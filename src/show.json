@@ -1,0 +1,19 @@
+{
+    "receivers": [
+        {
+            "id": 80,
+            "group_name": "pit",
+            "led_count": 30
+        },
+        {
+            "id": 81,
+            "group_name": "pit",
+            "led_count": 30
+        },
+        {
+            "id": 82,
+            "group_name": "battery",
+            "led_count": 30
+        }
+    ]
+}
