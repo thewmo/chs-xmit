@@ -1,4 +1,4 @@
-use crate::types::Color;
+use crate::show::HSV;
 
 #[repr(u8)]
 #[derive(Debug,Copy,Clone)]
@@ -95,7 +95,7 @@ pub struct ShowPacket {
     pub effect: EffectId,
 
     // the color (will be sent as three bytes, hsv)
-    pub color: Color,
+    pub color: HSV,
     
     // the duration of the "attack"/fade-in of the effect, in 10s of millis
     pub attack: u8,
@@ -119,9 +119,9 @@ pub struct ShowPacket {
 impl ShowPacket {
     pub fn marshal(self: &Self, buf: &mut Vec<u8>) {
         buf.push(self.effect as u8);
-        buf.push(self.color.hue);
-        buf.push(self.color.saturation);
-        buf.push(self.color.brightness);
+        buf.push(self.color.0);
+        buf.push(self.color.1);
+        buf.push(self.color.2);
         buf.push(self.attack);
         buf.push(self.sustain);
         buf.push(self.release);

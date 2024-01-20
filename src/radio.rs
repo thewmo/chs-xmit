@@ -1,5 +1,5 @@
 use log::debug;
-use std::thread::sleep;
+use std::{thread::sleep, cell::RefCell};
 use rfm69::{Rfm69, registers::{Registers, Modulation, ModulationShaping, 
     ModulationType, DataMode, PacketConfig, PacketFormat, 
     PacketDc, PacketFiltering, InterPacketRxDelay, RxBw, RxBwFsk,
@@ -58,7 +58,10 @@ const RX_BW: RxBw<RxBwFsk> = RxBw {
 type MyRfm = Rfm69<rfm69::NoCs, rfm69::SpiTransactional<Spidev>>;
 
 pub struct Radio {
-    radio: MyRfm,
+    // putting the radio in a refcell allows us to call mut methods on it without
+    // having a mutable radio, which otherwise percolates up the encapsulation stack
+    // and causes pain
+    radio: RefCell<MyRfm>,
     my_address: u8,
     power: i8
 }
@@ -125,34 +128,36 @@ impl Radio {
         for (index, val) in radio.read_all_regs()?.iter().enumerate() {
             debug!("Register 0x{:02x} = 0x{:02x}", index + 1, val);
         }
-        Ok(Radio { radio, 
+        Ok(Radio { radio: RefCell::new(radio), 
             my_address: config.transmitter_id, 
             power })
     }
 
-    pub fn send(self: &mut Self, packet: &Packet) -> Result<(),RadioError> {
+    pub fn send(self: &Self, packet: &Packet) -> Result<(),RadioError> {
         self.pre_tx_hook()?;
         let marshalled = packet.marshal(self.my_address, 0, 0);
         debug!("Sending packet: {:?}, marshalled: {:?}", packet, marshalled);
-        let result = self.radio.send(marshalled.as_slice());
+        let result = self.radio.borrow_mut().send(marshalled.as_slice());
         self.post_tx_hook()?;
         result.map_err(From::from)
     }
 
-    fn pre_tx_hook(self: &mut Self) -> Result<(),RadioError> {
+    fn pre_tx_hook(self: &Self) -> Result<(),RadioError> {
         if (18..=20).contains(&self.power) {
-            self.radio.write(Registers::Ocp, 0x0F)?; // disables over-current protection
-            self.radio.pa13_dbm1(Pa13dBm1::High20dBm)?;
-            self.radio.pa13_dbm2(Pa13dBm2::High20dBm)?;
+            let mut rad = self.radio.borrow_mut();
+            rad.write(Registers::Ocp, 0x0F)?; // disables over-current protection
+            rad.pa13_dbm1(Pa13dBm1::High20dBm)?;
+            rad.pa13_dbm2(Pa13dBm2::High20dBm)?;
         }
         return Ok(())
     }
 
-    fn post_tx_hook(self: &mut Self) -> Result<(),RadioError> {
+    fn post_tx_hook(self: &Self) -> Result<(),RadioError> {
+        let mut rad = self.radio.borrow_mut();
         if (18..=20).contains(&self.power) {
-            self.radio.write(Registers::Ocp, 0x1A)?; // re-enables over-current protection
-            self.radio.pa13_dbm1(Pa13dBm1::Normal)?;
-            self.radio.pa13_dbm2(Pa13dBm2::Normal)?;
+            rad.write(Registers::Ocp, 0x1A)?; // re-enables over-current protection
+            rad.pa13_dbm1(Pa13dBm1::Normal)?;
+            rad.pa13_dbm2(Pa13dBm2::Normal)?;
         }
         return Ok(())
     }

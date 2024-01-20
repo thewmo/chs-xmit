@@ -4,7 +4,8 @@ use crate::packet::EffectId;
 /// this struct maps directly to the show JSON
 #[derive(Debug,Deserialize)]
 pub struct Show {
-    pub receivers: Vec<ReceiverConfiguration>
+    pub receivers: Vec<ReceiverConfiguration>,
+    pub mappings: Vec<LightMapping>
 }
 
 ///
@@ -33,7 +34,7 @@ pub enum Effect {
 }
 
 impl Effect {
-    fn to_effect_id(self: &Self) -> EffectId {
+    pub fn to_effect_id(self: &Self) -> EffectId {
         match &self {
             Effect::Pop => EffectId::Pop,
             Effect::Firecrackers {..} => EffectId::Firecrackers,
@@ -92,8 +93,8 @@ pub enum LightMappingType {
     Clip(String)
 }
 
-#[derive(Debug,Deserialize)]
-pub struct HSV(u8, u8, u8);
+#[derive(Debug,Clone,Copy,Deserialize)]
+pub struct HSV(pub u8, pub u8, pub u8);
 
 #[derive(Debug,Deserialize)]
 pub struct LightMapping {
@@ -101,11 +102,11 @@ pub struct LightMapping {
     pub light: LightMappingType,
     pub color: HSV,
     pub override_clip_color: bool,
-    pub attack: u16,
-    pub sustain: u16,
-    pub release: u16,
+    pub attack: u32,
+    pub sustain: u32,
+    pub release: u32,
     pub send_note_off: bool,
     pub tempo: u8,
     pub modulation: u8,
-    pub targets: Vec<u8>
+    pub targets: Vec<String>
 }

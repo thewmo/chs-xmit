@@ -6,13 +6,12 @@ use packet::{Packet,PacketPayload,ShowPacket,EffectId};
 use log::{debug,info,error};
 use crossbeam_channel::bounded;
 use anyhow::{anyhow,Result,Context};
+use show::HSV;
 
 use crate::radio::Radio;
-use crate::types::Color;
 use crate::director::{Director,DirectorMessage};
 
 pub mod config;
-pub mod types;
 pub mod radio;
 pub mod midi;
 pub mod packet;
@@ -88,7 +87,8 @@ fn main() -> anyhow::Result<()> {
                         { tx.send(DirectorMessage::MidiMessage { ts, buf: midi_bytes.to_owned() }).unwrap(); }, ()).unwrap();
         
         // create a director and give it the receive channel, the config, and the radio
-        let mut director = Director::new(&config, &mut radio, rx);
+        // note the director takes ownership of the config, radio, and receiver
+        let mut director = Director::new(config, radio, rx);
         director.run_show()?;
         // note the connection must be kept alive until the show is over, 
         // otherwise midirs will close the connection
@@ -105,7 +105,7 @@ fn all_on(radio: &mut Radio) {
         payload: PacketPayload::Show(
             ShowPacket {
                 effect: EffectId::Pop,
-                color: Color { hue: 0, saturation: 0, brightness: 255 },
+                color: HSV(0, 0, 255),
                 attack: 0,
                 sustain: 255,
                 release: 0,
