@@ -65,7 +65,7 @@ pub enum Effect {
 #[derive(Debug,Deserialize)]
 pub struct ReceiverConfiguration {
     pub id: u8,
-    pub group_name: String,
+    pub group_name: Option<String>,
     pub led_count: u16,
 }
 
@@ -91,12 +91,12 @@ pub struct LightMapping {
     pub midi: MidiMappingType,
     pub light: LightMappingType,
     pub color: String,
-    pub override_clip_color: bool,
+    pub override_clip_color: Option<bool>,
     pub attack: u32,
     pub sustain: u32,
     pub release: u32,
-    pub send_note_off: bool,
-    pub tempo: u8,
-    pub modulation: u8,
+    pub send_note_off: Option<bool>,
+    pub tempo: Option<u8>,
+    pub modulation: Option<u8>,
     pub targets: Vec<String>
 }

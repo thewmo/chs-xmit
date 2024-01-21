@@ -191,7 +191,7 @@ impl Packet {
     pub fn marshal(self: &Self, from_id: u8, packet_id: u8, flags: u8) -> Vec<u8> {
         let mut buf = Vec::with_capacity(64);
         buf.push(0); // we'll poke the length in here later
-        // recipient address is next, this is either 255 for broadcast or a single receiver id
+        // recipient address is next, this is either 255 for broadcast/multi *or* a single receiver id
         buf.push(match self.recipients.len() {
             1 => self.recipients[0],
             _ => 0xFF,

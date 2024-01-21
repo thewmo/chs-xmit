@@ -41,7 +41,15 @@ pub struct ConfigFile {
     /// the depth of buffer to use on the internal channel between
     /// the MIDI read thread and the main thread, will use a default
     /// value if none supplied
-    pub channel_buf_depth: Option<usize>
+    pub channel_buf_depth: Option<usize>,
+
+    /// the amount of time to allow to elapse after the last
+    /// show packet before we start periodically sending lights-out packets
+    pub lights_out_delay: f64,
+
+    /// once we are sending lights-out packets, how long to
+    /// allow to elapse between packets (1/freq)
+    pub lights_out_period: f64
 
 }
 

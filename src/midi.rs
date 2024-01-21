@@ -1,5 +1,4 @@
-use log::error;
-use midir::{MidiInput, MidiInputPort, MidiInputPorts};
+use midir::{MidiInput, MidiInputPort};
 use crate::config::ConfigFile;
 
 pub fn midi_init(config: &ConfigFile) -> Result<MidiInput, midir::InitError> {

@@ -1,7 +1,14 @@
 {
     "colors": {
         "red": { "h": 0, "s": 255, "v": 255 },
-        "white": { "h": 0, "s": 0, "v": 255 }
+        "white": { "h": 0, "s": 0, "v": 255 },
+        "orange": { "h": 32, "s": 255, "v": 255 },
+        "yellow": { "h": 64, "s": 255, "v": 255 },
+        "green": { "h": 96, "s": 255, "v": 255 },
+        "aqua": { "h": 128, "s": 255, "v": 255 },
+        "blue": { "h": 160, "s": 255, "v": 255 },
+        "purple": { "h": 192, "s": 255, "v": 255 },
+        "pink": { "h": 224, "s": 255, "v": 255 }
     },
 
     "receivers": [
@@ -20,5 +27,17 @@
             "group_name": "battery",
             "led_count": 30
         }
+    ],
+    "mappings": [
+        {
+            "midi": { "Note": { "channel": 0, "note": "c4" }},
+            "light": { "Effect": "Pop" },
+            "color": "red",
+            "attack": 10,
+            "sustain": 5000,
+            "release": 200,
+            "targets": []
+        }
+
     ]
 }

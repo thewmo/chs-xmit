@@ -3,7 +3,7 @@ use std::fs::File;
 use std::io;
 use clap::{Parser, command};
 use packet::{Packet,PacketPayload,ShowPacket,EffectId};
-use log::{debug,info,error,warn};
+use log::{debug,info,warn,error};
 use crossbeam_channel::bounded;
 use anyhow::{anyhow,Result,Context};
 use std::thread;
@@ -97,10 +97,14 @@ fn main() -> anyhow::Result<()> {
         let mut director = Director::new(config, radio, rx);
 
         // launch the show in its own thread
-        let join_handle = thread::spawn(move || { director.run_show() });
+        let join_handle = thread::spawn(move || { 
+            if let Err(e) = director.run_show() { 
+                error!("Show terminated early with error: {}", e);
+            } 
+        });
 
         // listen for signals and forward them to the director
-        let mut sigs = vec![
+        let sigs = vec![
             SIGINT, 
             // initiate shutdown
             SIGTERM,
@@ -112,24 +116,29 @@ fn main() -> anyhow::Result<()> {
         
         let mut signals = SignalsInfo::<WithOrigin>::new(&sigs)?;
 
-        for info in &mut signals {
-            match info.signal {
-                SIGINT | SIGTERM => {
-                    tx.send(DirectorMessage::Shutdown)?;
-                    break;
-                },
-                SIGHUP => { tx.send(DirectorMessage::Reload)?; }
-                SIGUSR1 => { tx.send(DirectorMessage::ReInitialize)?; }
-                x => { warn!("Unexpected signal: {}", x); }
+        if !join_handle.is_finished() {
+            for info in &mut signals {
+                debug!("In signal handling loop");
+                match info.signal {
+                    SIGINT | SIGTERM => {
+                        tx.send(DirectorMessage::Shutdown)?;
+                        break;
+                    },
+                    SIGHUP => { tx.send(DirectorMessage::Reload)?; }
+                    SIGUSR1 => { tx.send(DirectorMessage::ReInitialize)?; }
+                    x => { warn!("Unexpected signal: {}", x); }
+                }
             }
         }
+        debug!("Exited signal handling loop");
+
 
         // note the connection must be kept alive until the show is over, 
         // otherwise midirs will close the connection
         drop(midi_connection);
 
         // join the show thread before shutdown
-        join_handle.join().unwrap()?;
+        join_handle.join();
         Ok(())
     } else {
         Err(anyhow!("No MIDI port matches prefix: {:?}", config.midi_port))
