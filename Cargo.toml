@@ -9,7 +9,7 @@ authors = ["Matthew Moore <matt@moore-fam.com>"]
 [dependencies]
 anyhow = "1.0.79"
 clap = { version="4.4.16", features = [ "derive" ] }
-env_logger = "0.10.1"
+env_logger = "0.11.0"
 linux-embedded-hal = "0.3.2"
 log = "0.4.20"
 midir = "0.9.1"
@@ -18,5 +18,6 @@ rfm69 = "0.5.0"
 serde = { version = "1.0.195", features = ["derive"] }
 serde_json = "1.0.111"
 crossbeam-channel = "0.5.11"
-signal-hook = "0.3.17"
+signal-hook = { version = "0.3.17", features = [ "extended-siginfo" ] }
+musical-note = "0.1.105"
 

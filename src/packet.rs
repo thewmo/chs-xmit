@@ -1,5 +1,10 @@
-use crate::show::HSV;
+use crate::show::Color;
+use crate::show::Effect;
 
+///
+/// this module concerns itself with building packet buffers from a given
+/// mapping
+/// 
 #[repr(u8)]
 #[derive(Debug,Copy,Clone)]
 pub enum EffectId {
@@ -21,6 +26,145 @@ pub enum EffectId {
     Rainbow = 16,
 }
 
+impl Effect {
+    pub fn to_effect_id(self: &Self) -> EffectId {
+        match &self {
+            Effect::Pop => EffectId::Pop,
+            Effect::Firecrackers {..} => EffectId::Firecrackers,
+            Effect::Chase {..} => EffectId::Chase,
+            Effect::Strobe {..} => EffectId::Strobe,
+            Effect::BidiChase {..} => EffectId::BidiChase,
+            Effect::OneShotChase {..} => EffectId::OneShotChase,
+            Effect::BidiOneShotChase {..} => EffectId::BidiOneShotChase,
+            Effect::Sparkle {..} => EffectId::Sparkle,
+            Effect::Wave {..} => EffectId::Wave,
+            Effect::PiezoTrigger {..} => EffectId::PiezoTrigger,
+            Effect::Flame {..} => EffectId::Flame,
+            Effect::Flame2 {..} => EffectId::Flame2,
+            Effect::Grass {..} => EffectId::Grass,
+            Effect::CircularChase {..} => EffectId::CircularChase,
+            Effect::BatteryTest => EffectId::BatteryTest,
+            Effect::Rainbow {..} => EffectId::Rainbow
+        }
+    }
+
+    /// 
+    /// given a borrow of a vector that is the packet buffer,
+    /// translate effect-specific parameters into "current param 1"
+    /// and "current param 2" in the radio protocol.
+    /// 
+    pub fn populate_effect_params(self: &Self, packet: &mut ShowPacket) {
+        packet.param1 = 0;
+        packet.param2 = 0;
+        match &self {
+            Effect::Firecrackers { delay_quantization, delay_multiplier} => {
+                packet.param1 = *delay_quantization;
+                packet.param2 = *delay_multiplier;
+            },
+            Effect::Chase { chase_length, reverse } => {
+                packet.param1 = *chase_length;
+                packet.param2 = if *reverse { 1 } else { 0 };
+            },
+            Effect::Strobe { division } => {
+                packet.param1 = *division;
+            },
+            Effect::BidiChase { chase_length } => {
+                packet.param1 = *chase_length;
+            },
+            Effect::OneShotChase { chase_length, reverse } => {
+                packet.param1 = *chase_length;
+                packet.param2 = if *reverse { 1 } else { 0 };
+            },
+            Effect::BidiOneShotChase { chase_length } => {
+                packet.param1 = *chase_length;
+            },
+            Effect::Sparkle { stride, tempo_division } => {
+                packet.param1 = *stride;
+                packet.param2 = *tempo_division;
+            },
+            Effect::Wave { alternate_hue, colorspace_fraction } => {
+                packet.param1 = *alternate_hue;
+                packet.param2 = *colorspace_fraction;
+            },
+            Effect::PiezoTrigger { flash_decay, threshold } => {
+                packet.param1 = *flash_decay;
+                packet.param2 = *threshold;
+            },
+            Effect::Flame { min_flicker, max_flicker} => {
+                packet.param1 = *min_flicker;
+                packet.param2 = *max_flicker;
+            },
+            Effect::Flame2 { min_flicker, max_flicker } => {
+                packet.param1 = *min_flicker;
+                packet.param2 = *max_flicker;
+            },
+            Effect::Grass { base_height, blade_top } => {
+                packet.param1 = *base_height;
+                packet.param2 = *blade_top;
+            },
+            Effect::CircularChase { chase_length, reverse } => {
+                packet.param1 = *chase_length;
+                packet.param2 = if *reverse { 1 } else { 0 };
+            }
+            _ => {}
+        }
+    }
+}
+
+#[derive(Debug,Copy,Clone)]
+pub enum Command {
+    SetGroup { group_id: u8 },
+    SetLedCount { led_count: u16 },
+    NewBrightness { brightness: u8 },
+    NewTempo { tempo: u8 },
+    Reset
+}
+
+impl Command {
+    pub fn to_id(self: &Self) -> CommandId {
+        match self {
+            Command::SetGroup {..} => CommandId::SetGroup,
+            Command::SetLedCount {..} => CommandId::SetLedCount,
+            Command::NewBrightness {..} => CommandId::NewBrightness,
+            Command::NewTempo {..} => CommandId::NewTempo,
+            Command::Reset => CommandId::Reset
+        }
+    }
+
+    pub fn marshal(self: &Self, buf: &mut Vec<u8>) {
+        buf.push(self.to_id() as u8);
+        self.populate_params(buf);
+    }
+
+    pub fn populate_params(self: &Self, buf: &mut Vec<u8>) {
+        match self {
+            Command::SetGroup { group_id} => {
+                buf.push(*group_id);
+                buf.push(0);
+                buf.push(0);
+            },
+            Command::SetLedCount { led_count } => {
+                buf.push((led_count >> 8) as u8);
+                buf.push((led_count & 0xFF) as u8);
+                buf.push(0);
+            },
+            Command::NewBrightness { brightness } => {
+                buf.push(*brightness);
+                buf.push(0);
+                buf.push(0);
+            },
+            Command::NewTempo { tempo } => {
+                buf.push(*tempo);
+                buf.push(0);
+                buf.push(0);
+            },
+            Command::Reset => {
+                buf.extend_from_slice(&[0;3]);
+            }
+        }
+    }
+}
+
 #[repr(u8)]
 #[derive(Debug,Copy,Clone)]
 pub enum CommandId {
@@ -39,26 +183,8 @@ pub struct Packet {
 
 #[derive(Debug,Copy,Clone)]
 pub enum PacketPayload {
-    Control(ControlPacket),
+    Control(Command),
     Show(ShowPacket)
-}
-
-#[derive(Debug,Copy,Clone)]
-pub struct ControlPacket {
-    pub command_id: CommandId,
-    pub param1: u8,
-    pub param2: u8,
-    pub request_reply: bool,
-}
-
-impl ControlPacket {
-    fn marshal(self: &Self, buf: &mut Vec<u8>) {
-        buf.push(0xFFu8); // "effect" value that tells the receiver this is a command
-        buf.push(self.command_id as u8);
-        buf.push(self.param1);
-        buf.push(self.param2);
-        buf.push(if self.request_reply { 1 } else { 0 })
-    }
 }
 
 impl Packet {
@@ -95,7 +221,7 @@ pub struct ShowPacket {
     pub effect: EffectId,
 
     // the color (will be sent as three bytes, hsv)
-    pub color: HSV,
+    pub color: Color,
     
     // the duration of the "attack"/fade-in of the effect, in 10s of millis
     pub attack: u8,
@@ -119,9 +245,9 @@ pub struct ShowPacket {
 impl ShowPacket {
     pub fn marshal(self: &Self, buf: &mut Vec<u8>) {
         buf.push(self.effect as u8);
-        buf.push(self.color.0);
-        buf.push(self.color.1);
-        buf.push(self.color.2);
+        buf.push(self.color.h);
+        buf.push(self.color.s);
+        buf.push(self.color.v);
         buf.push(self.attack);
         buf.push(self.sustain);
         buf.push(self.release);

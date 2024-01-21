@@ -3,13 +3,17 @@ use std::fs::File;
 use std::io;
 use clap::{Parser, command};
 use packet::{Packet,PacketPayload,ShowPacket,EffectId};
-use log::{debug,info,error};
+use log::{debug,info,error,warn};
 use crossbeam_channel::bounded;
 use anyhow::{anyhow,Result,Context};
-use show::HSV;
+use std::thread;
+use signal_hook::consts::{SIGINT,SIGTERM,SIGHUP,SIGUSR1};
+use signal_hook::iterator::SignalsInfo;
+use signal_hook::iterator::exfiltrator::WithOrigin;
 
 use crate::radio::Radio;
 use crate::director::{Director,DirectorMessage};
+use crate::show::Color;
 
 pub mod config;
 pub mod radio;
@@ -81,18 +85,51 @@ fn main() -> anyhow::Result<()> {
     let (tx, rx) = 
         bounded(config.channel_buf_depth.unwrap_or(DEFAULT_BUFFER_SIZE));
 
+    let midi_tx = tx.clone();
+
     if let Some(port) = midi::find_port(&midi_in, &config.midi_port) {
-        let connection = midi_in.connect(&port, "chs-lights-in", 
+        let midi_connection = midi_in.connect(&port, "chs-lights-in", 
                     move | ts, midi_bytes, _ | 
-                        { tx.send(DirectorMessage::MidiMessage { ts, buf: midi_bytes.to_owned() }).unwrap(); }, ()).unwrap();
+                        { midi_tx.send(DirectorMessage::MidiMessage { ts, buf: midi_bytes.to_owned() }).unwrap(); }, ()).unwrap();
         
         // create a director and give it the receive channel, the config, and the radio
         // note the director takes ownership of the config, radio, and receiver
         let mut director = Director::new(config, radio, rx);
-        director.run_show()?;
+
+        // launch the show in its own thread
+        let join_handle = thread::spawn(move || { director.run_show() });
+
+        // listen for signals and forward them to the director
+        let mut sigs = vec![
+            SIGINT, 
+            // initiate shutdown
+            SIGTERM,
+            // reload show from JSON
+            SIGHUP,
+            // reinitialize current show
+            SIGUSR1,
+        ];
+        
+        let mut signals = SignalsInfo::<WithOrigin>::new(&sigs)?;
+
+        for info in &mut signals {
+            match info.signal {
+                SIGINT | SIGTERM => {
+                    tx.send(DirectorMessage::Shutdown)?;
+                    break;
+                },
+                SIGHUP => { tx.send(DirectorMessage::Reload)?; }
+                SIGUSR1 => { tx.send(DirectorMessage::ReInitialize)?; }
+                x => { warn!("Unexpected signal: {}", x); }
+            }
+        }
+
         // note the connection must be kept alive until the show is over, 
         // otherwise midirs will close the connection
-        drop(connection); 
+        drop(midi_connection);
+
+        // join the show thread before shutdown
+        join_handle.join().unwrap()?;
         Ok(())
     } else {
         Err(anyhow!("No MIDI port matches prefix: {:?}", config.midi_port))
@@ -105,7 +142,7 @@ fn all_on(radio: &mut Radio) {
         payload: PacketPayload::Show(
             ShowPacket {
                 effect: EffectId::Pop,
-                color: HSV(0, 0, 255),
+                color: Color { h: 0, s: 0, v: 255 },
                 attack: 0,
                 sustain: 255,
                 release: 0,
