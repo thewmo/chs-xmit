@@ -21,6 +21,7 @@ pub mod midi;
 pub mod packet;
 pub mod show;
 pub mod director;
+pub mod showstate;
 
 const DEFAULT_BUFFER_SIZE: usize = 10;
 
@@ -124,8 +125,7 @@ fn main() -> anyhow::Result<()> {
                         tx.send(DirectorMessage::Shutdown)?;
                         break;
                     },
-                    SIGHUP => { tx.send(DirectorMessage::Reload)?; }
-                    SIGUSR1 => { tx.send(DirectorMessage::ReInitialize)?; }
+                    SIGHUP => { tx.send(DirectorMessage::Reload)?; },
                     x => { warn!("Unexpected signal: {}", x); }
                 }
             }
@@ -147,7 +147,7 @@ fn main() -> anyhow::Result<()> {
 
 fn all_on(radio: &mut Radio) {
     let all_on = Packet {
-        recipients: vec![],
+        recipients: &vec![],
         payload: PacketPayload::Show(
             ShowPacket {
                 effect: EffectId::Pop,

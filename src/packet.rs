@@ -8,6 +8,7 @@ use crate::show::Effect;
 #[repr(u8)]
 #[derive(Debug,Copy,Clone)]
 pub enum EffectId {
+    Off = 0,
     Pop = 1,
     Firecrackers = 2,
     Chase = 3,
@@ -176,8 +177,8 @@ pub enum CommandId {
 }
 
 #[derive(Debug)]
-pub struct Packet {
-    pub recipients: Vec<u8>,
+pub struct Packet<'a> {
+    pub recipients: &'a Vec<u8>,
     pub payload: PacketPayload
 }
 
@@ -187,7 +188,7 @@ pub enum PacketPayload {
     Show(ShowPacket)
 }
 
-impl Packet {
+impl<'a> Packet<'a> {
     pub fn marshal(self: &Self, from_id: u8, packet_id: u8, flags: u8) -> Vec<u8> {
         let mut buf = Vec::with_capacity(64);
         buf.push(0); // we'll poke the length in here later
@@ -255,4 +256,16 @@ impl ShowPacket {
         buf.push(self.param2);
         buf.push(self.tempo);
     }
+
+    pub const OFF_PACKET: ShowPacket = ShowPacket {
+        effect: EffectId::Off,
+        color: Color { h: 0, s: 0, v: 0 },
+        attack: 0,
+        sustain: 0,
+        release: 0,
+        param1: 0,
+        param2: 0,
+        tempo: 0
+    };
+
 }

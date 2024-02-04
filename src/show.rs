@@ -19,6 +19,7 @@ pub struct ShowDefinition {
 
     /// associations between MIDI signals and effects or clips
     pub mappings: Vec<LightMapping>
+
 }
 
 ///
@@ -64,8 +65,13 @@ pub enum Effect {
 /// for a given receiver, what is its id, group name, and led count
 #[derive(Debug,Deserialize)]
 pub struct ReceiverConfiguration {
+    /// the id of the receiver
     pub id: u8,
+    /// if a receiver has a name, that name can be used to refer to it in target lists rather than its id
+    pub name: Option<String>,
+    /// the name of the group the receiver belongs to. note that underlying group ids will be dynamically assigned
     pub group_name: Option<String>,
+    /// the number of LEDs in the string
     pub led_count: u16,
 }
 
@@ -98,5 +104,14 @@ pub struct LightMapping {
     pub send_note_off: Option<bool>,
     pub tempo: Option<u8>,
     pub modulation: Option<u8>,
-    pub targets: Vec<String>
+    /// targets is optional, if absent, all receivers are targets
+    pub targets: Option<Vec<serde_json::Value>>,
+}
+
+impl LightMapping {
+
+    pub fn get_id(self: &Self) -> usize {
+        self as *const LightMapping as usize
+    }
+    
 }

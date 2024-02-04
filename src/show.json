@@ -33,10 +33,10 @@
             "midi": { "Note": { "channel": 0, "note": "c4" }},
             "light": { "Effect": "Pop" },
             "color": "red",
-            "attack": 10,
+            "attack": 100,
             "sustain": 5000,
             "release": 200,
-            "targets": []
+            "send_note_off": false
         }
 
     ]
