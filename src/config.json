@@ -5,7 +5,7 @@
     "transmitter_power": 17,
     "settle_time_millis": 10,
     "midi_client_name": "chs-lights",
-    "midi_port": "USB-MIDI",
+    "midi_port": "W-P64",
     "show_file": "./src/show.json",
     "lights_out_delay": 20,
     "lights_out_period": 2

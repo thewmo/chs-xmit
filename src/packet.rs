@@ -1,5 +1,11 @@
+use std::ops::Range;
 use crate::show::Color;
 use crate::show::Effect;
+
+/// define ID ranges for transmitters, groups, and receivers
+pub const TRANSMITTER_ID_RANGE: Range<u8> = 0u8..10u8;
+pub const GROUP_ID_RANGE: Range<u8> = 10u8..80u8;
+pub const RECEIVER_ID_RANGE: Range<u8> = 80u8..255u8;
 
 ///
 /// this module concerns itself with building packet buffers from a given
@@ -133,6 +139,7 @@ impl Command {
     }
 
     pub fn marshal(self: &Self, buf: &mut Vec<u8>) {
+        buf.push(0xFFu8); // command marker
         buf.push(self.to_id() as u8);
         self.populate_params(buf);
     }
@@ -189,14 +196,18 @@ pub enum PacketPayload {
 }
 
 impl<'a> Packet<'a> {
+
+    fn is_broadcast(self: &Self) -> bool {
+        // if the recipients array is empty (target all), or contains multiple targets, or contains a group
+        // target, this is a broadcast packet (from a hardware perspective)
+        self.recipients.len() == 0 || self.recipients.len() > 1 || GROUP_ID_RANGE.contains(&self.recipients[0])
+    }
+
     pub fn marshal(self: &Self, from_id: u8, packet_id: u8, flags: u8) -> Vec<u8> {
         let mut buf = Vec::with_capacity(64);
         buf.push(0); // we'll poke the length in here later
-        // recipient address is next, this is either 255 for broadcast/multi *or* a single receiver id
-        buf.push(match self.recipients.len() {
-            1 => self.recipients[0],
-            _ => 0xFF,
-        });
+        // recipient address is next, this is either 255 for broadcast/multi or a group id or a single receiver id
+        buf.push(if self.is_broadcast() { 0xFF } else { self.recipients[0] });
         // three bytes that are here for compatibility with RadioHead
         buf.push(from_id);
         buf.push(packet_id);
@@ -205,7 +216,8 @@ impl<'a> Packet<'a> {
             PacketPayload::Control(p) => p.marshal(&mut buf),
             PacketPayload::Show(p) => p.marshal(&mut buf),
         }
-        if self.recipients.len() > 1 {
+        // for a broadcast packet we include the actual targets in the data portion of the message
+        if self.is_broadcast() {
             for r in self.recipients.iter() {
                 buf.push(*r)
             }

@@ -10,8 +10,9 @@ use musical_note::ResolvedNote;
 use anyhow::{Result, anyhow};
 
 use crate::radio::{Radio,RadioError};
-use crate::show::{Effect, LightMapping, LightMappingType, MidiMappingType, ShowDefinition};
-use crate::packet::{Command,ShowPacket,PacketPayload,Packet};
+use crate::show::{ClipStep, Effect, LightMapping, LightMappingType, MidiMappingType, ShowDefinition};
+use crate::packet::{Command, Packet, PacketPayload, ShowPacket, GROUP_ID_RANGE};
+use crate::clip::ClipState;
 use crate::director::DEFAULT_TICK;
 
 /// mutable state associated with the show. some things are derived from
@@ -30,11 +31,15 @@ pub struct ShowState<'a,'b> {
     /// a map to lookup the u8 ids for named targets
     target_lookup: HashMap<String,u8>,
 
-    /// midi channel/note to note mapping lookup
-    note_mappings: HashMap<(u4,u7), LightMappingMeta<'b>>,
+    /// midi channel/note to light mapping key
+    note_mappings: HashMap<(u4,u7), usize>,
 
-    /// midi channel/cc to note mapping lookup
-    controller_mappings: HashMap<(u4,u7), LightMappingMeta<'b>>,
+    /// midi channel/cc to light mapping key
+    controller_mappings: HashMap<(u4,u7), usize>,
+
+    light_mappings: HashMap<usize,LightMappingMeta<'b>>,
+
+    clip_state: HashMap<String,ClipState>,
 
 }
 
@@ -58,7 +63,7 @@ impl ReceiverState {
 
     pub fn activate(self: &mut Self, mapping: &LightMapping) {
         self.trigger_mapping = match mapping {
-            _ if mapping.send_note_off.unwrap_or(true) => mapping.get_id(),
+            _ if !mapping.one_shot.unwrap_or(false) => mapping.get_id(),
             _ => Self::INACTIVE
         }
     }
@@ -89,9 +94,11 @@ fn convert_millis_adr(millis: u32) -> u8 {
 }
 
 /// sustain is sent in tenths of seconds up until 12.799 seconds, then whole seconds after that
+/// sustain of zero means "on until an off command"
 fn convert_millis_sustain(millis: u32) -> u8 {
     match millis {
-        0..=12799 => ((millis / 100) & 0x7F) as u8,
+        0 => 255, 
+        1..=12799 => ((millis / 100) & 0x7F) as u8,
         _ => (((millis / 1000) & 0x7F) | 0x80) as u8
     }
 }
@@ -105,6 +112,9 @@ struct LightMappingMeta<'a> {
     pub receivers: Vec<Rc<RefCell<ReceiverState>>>
 }
 
+/// given a target expressed as a json node of any type, convert
+/// it to a string that represents either a u8 or a named receiver,
+/// or return an error if the node is not of a type that con be so converted
 fn convert_target(json_value: &serde_json::Value) -> Result<String> {
     match &json_value {
         serde_json::Value::Number(value) => 
@@ -122,10 +132,12 @@ impl<'a,'b> ShowState<'a,'b> {
 
         let mut target_lookup: HashMap<String,u8> = HashMap::new();
         let mut group_members: HashMap<u8,Vec<u8>> = HashMap::new();
-        let mut group_id = 11;
-        let mut note_mappings: HashMap<(u4,u7), LightMappingMeta> = HashMap::new();
-        let mut controller_mappings: HashMap<(u4,u7), LightMappingMeta> = HashMap::new();
+        let mut group_id = GROUP_ID_RANGE.start;
+        let mut light_mappings: HashMap<usize, LightMappingMeta> = HashMap::new();
+        let mut note_mappings: HashMap<(u4,u7), usize> = HashMap::new();
+        let mut controller_mappings: HashMap<(u4,u7), usize> = HashMap::new();
         let mut receiver_state: HashMap<u8,Rc<RefCell<ReceiverState>>> = HashMap::new();
+        let mut clip_state: HashMap<String,ClipState> = HashMap::new();
 
         // preprocess receivers
         for r in show.receivers.iter() {
@@ -149,45 +161,41 @@ impl<'a,'b> ShowState<'a,'b> {
         
         // preprocess light mappings
         for m in show.mappings.iter() {
-            let resolved_targets = match &m.targets {
-                None => vec![], // "all receivers" is modeled as an empty target
-                Some(tgts) => {
-                    let mut result: Vec<u8> = vec![];
-                    for json_tgt in tgts.iter() {
-                        let tgt_val = convert_target(json_tgt)?;
-                        let otgt = target_lookup.get(&tgt_val);
-                        match otgt {
-                            Some(id) => result.push(*id),
-                            None => return Err(anyhow!("Target in target list does not match any known group or receiver: {}", tgt_val))
-                        }
-                    }
-                    result
-                }
-            };
-            let resolved_receivers = 
-                ShowState::expand_groups(&group_members, &receiver_state, &resolved_targets);
-
+            light_mappings.insert(m.get_id(), 
+                ShowState::create_light_mapping_meta(m, &target_lookup, &group_members, &receiver_state)?);
             match &m.midi {
                 MidiMappingType::Note { channel, note } => {
                     note_mappings.insert(((*channel).into(), ResolvedNote::from_str(&note).unwrap().midi.into()), 
-                        LightMappingMeta { source: m, 
-                        targets: resolved_targets, 
-                        receivers: resolved_receivers });
+                        m.get_id());
                 }
                 MidiMappingType::Controller { channel, cc } => {
                     controller_mappings.insert(((*channel).into(), (*cc).into()), 
-                        LightMappingMeta { source: m,
-                        targets: resolved_targets,
-                        receivers: resolved_receivers});
+                        m.get_id());
                 }
             }
         }
+
+        // preprocess clip-embedded light mappings
+        for clip_steps in show.clips.values() {
+            for step in clip_steps.iter() {
+                match step {
+                    ClipStep::MappingOn(m) => {
+                        light_mappings.insert(m.get_id(), 
+                            ShowState::create_light_mapping_meta(m, &target_lookup, &group_members, &receiver_state)?);
+                    },
+                    _ => {}
+                }
+            }
+        }
+
         Ok(ShowState { 
             radio,
             last_midi: Instant::now(),
             target_lookup,
             note_mappings, 
-            controller_mappings
+            controller_mappings,
+            light_mappings,
+            clip_state
      })
     }
     
@@ -216,7 +224,7 @@ impl<'a,'b> ShowState<'a,'b> {
 
         // now send a reset packet to all receivers
         self.radio.send(&Packet { 
-            recipients: &vec![0],
+            recipients: &vec![],
             payload: PacketPayload::Control(Command::Reset)
         })?;
 
@@ -249,9 +257,9 @@ impl<'a,'b> ShowState<'a,'b> {
 
     fn process_controller(self: &Self, show: &ShowDefinition, channel: u4, controller: u7, value: u7) -> anyhow::Result<Duration> {
         match self.controller_mappings.get(&(channel, controller)) {
-            Some(mapping_meta) => match u8::from(value) {
-                127 => self.activate(show, mapping_meta),
-                0 => self.deactivate(show, mapping_meta),
+            Some(id) => match u8::from(value) {
+                127 => self.activate(show, *id),
+                0 => self.deactivate(show, *id),
                 _ => Ok(DEFAULT_TICK)
             },
             _ => Ok(DEFAULT_TICK)
@@ -260,19 +268,20 @@ impl<'a,'b> ShowState<'a,'b> {
 
     fn process_note_on(self: &mut Self, show: &ShowDefinition, channel: u4, key: u7, _velocity: u7) -> anyhow::Result<Duration> {
         match self.note_mappings.get(&(channel, key)) {
-            Some(mapping_meta) => self.activate(show, mapping_meta),
+            Some(id) => self.activate(show, *id),
             _ => Ok(DEFAULT_TICK)
         }
     }
 
     fn process_note_off(self: &Self, show: &ShowDefinition, channel: u4, key: u7, _velocity: u7) -> anyhow::Result<Duration> {
         match self.note_mappings.get(&(channel, key)) {
-            Some(mapping_meta) => self.deactivate(&show, mapping_meta),
+            Some(id) => self.deactivate(&show, *id),
             _ => Ok(DEFAULT_TICK)
         }
     }
 
-    fn activate(self: &Self, show: &ShowDefinition, mapping_meta: &LightMappingMeta) -> anyhow::Result<Duration> {
+    pub fn activate(self: &Self, show: &ShowDefinition, mapping_id: usize) -> anyhow::Result<Duration> {
+        let mapping_meta = self.light_mappings.get(&mapping_id).unwrap();
         match &mapping_meta.source.light {
             LightMappingType::Effect(effect) => self.activate_effect(&show, &mapping_meta, &effect),
             LightMappingType::Clip(clip) => self.activate_clip(&show, &mapping_meta, &clip)
@@ -283,12 +292,12 @@ impl<'a,'b> ShowState<'a,'b> {
         let mut show_packet = ShowPacket {
             effect: effect.to_effect_id(),
             color: *show.colors.get(&mapping_meta.source.color).unwrap(),
-            attack: convert_millis_adr(mapping_meta.source.attack),
-            sustain: convert_millis_sustain(mapping_meta.source.sustain),
-            release: convert_millis_adr(mapping_meta.source.release),
+            attack: convert_millis_adr(mapping_meta.source.attack.unwrap_or(0)),
+            sustain: convert_millis_sustain(mapping_meta.source.sustain.unwrap_or(0)),
+            release: convert_millis_adr(mapping_meta.source.release.unwrap_or(0)),
             param1: 0,
             param2: 0,
-            tempo: mapping_meta.source.tempo.unwrap_or(0)
+            tempo: mapping_meta.source.tempo.unwrap_or(0.0) as u8
         };
         effect.populate_effect_params(&mut show_packet);
         let packet = Packet {
@@ -311,7 +320,8 @@ impl<'a,'b> ShowState<'a,'b> {
         Ok(DEFAULT_TICK)
     }
 
-    fn deactivate(self: &Self, _show: &ShowDefinition, mapping_meta: &LightMappingMeta) -> anyhow::Result<Duration>{
+    pub fn deactivate(self: &Self, _show: &ShowDefinition, mapping_id: usize) -> anyhow::Result<Duration>{
+        let mapping_meta = self.light_mappings.get(&mapping_id).unwrap();
         match &mapping_meta.source.light {
             LightMappingType::Effect(e) => self.deactivate_effect(mapping_meta, e),
             LightMappingType::Clip(c) => self.deactivate_clip(mapping_meta,c)
@@ -320,7 +330,7 @@ impl<'a,'b> ShowState<'a,'b> {
 
     fn deactivate_effect(self: &Self, mapping_meta: &LightMappingMeta, _effect: &Effect) -> anyhow::Result<Duration> {
         
-        if mapping_meta.source.send_note_off.unwrap_or(true) {
+        if !mapping_meta.source.one_shot.unwrap_or(false) {
             let simple_off_path = mapping_meta.receivers.iter().all(
                 |r| r.borrow().activated_by(&mapping_meta.source));
 
@@ -362,6 +372,37 @@ impl<'a,'b> ShowState<'a,'b> {
                     .map(|k| receiver_state.get(&k).unwrap().clone())
                     .collect()
         }
+    }
+
+    fn create_light_mapping_meta<'c>(m: &'c LightMapping, 
+        target_lookup: &HashMap<String,u8>, 
+        group_members: &HashMap<u8,Vec<u8>>, 
+        receiver_state: &HashMap<u8,Rc<RefCell<ReceiverState>>>) -> Result<LightMappingMeta<'c>> {
+
+        let resolved_targets = match &m.targets {
+            None => vec![], // "all receivers" is modeled as an empty target
+            Some(tgts) => {
+                let mut result: Vec<u8> = vec![];
+                for json_tgt in tgts.iter() {
+                    let tgt_val = convert_target(json_tgt)?;
+                    let otgt = target_lookup.get(&tgt_val);
+                    match otgt {
+                        Some(id) => result.push(*id),
+                        None => return Err(anyhow!("Target in target list does not match any known group or receiver: {}", tgt_val))
+                    }
+                }
+                result
+            }
+        };
+        let resolved_receivers = 
+            ShowState::expand_groups(group_members, receiver_state, &resolved_targets);
+
+        Ok(LightMappingMeta {
+            source: m,
+            targets: resolved_targets,
+            receivers: resolved_receivers
+        })
+
     }
 
 }

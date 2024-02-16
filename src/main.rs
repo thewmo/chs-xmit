@@ -7,7 +7,7 @@ use log::{debug,info,warn,error};
 use crossbeam_channel::bounded;
 use anyhow::{anyhow,Result,Context};
 use std::thread;
-use signal_hook::consts::{SIGINT,SIGTERM,SIGHUP,SIGUSR1};
+use signal_hook::consts::{SIGINT,SIGTERM,SIGHUP};
 use signal_hook::iterator::SignalsInfo;
 use signal_hook::iterator::exfiltrator::WithOrigin;
 
@@ -22,6 +22,7 @@ pub mod packet;
 pub mod show;
 pub mod director;
 pub mod showstate;
+pub mod clip;
 
 const DEFAULT_BUFFER_SIZE: usize = 10;
 
@@ -106,13 +107,11 @@ fn main() -> anyhow::Result<()> {
 
         // listen for signals and forward them to the director
         let sigs = vec![
-            SIGINT, 
             // initiate shutdown
+            SIGINT, 
             SIGTERM,
             // reload show from JSON
             SIGHUP,
-            // reinitialize current show
-            SIGUSR1,
         ];
         
         let mut signals = SignalsInfo::<WithOrigin>::new(&sigs)?;
@@ -138,7 +137,7 @@ fn main() -> anyhow::Result<()> {
         drop(midi_connection);
 
         // join the show thread before shutdown
-        join_handle.join();
+        let _ = join_handle.join();
         Ok(())
     } else {
         Err(anyhow!("No MIDI port matches prefix: {:?}", config.midi_port))

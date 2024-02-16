@@ -1,5 +1,5 @@
 use log::debug;
-use std::{thread::sleep, cell::RefCell};
+use std::{cell::{Cell, RefCell}, num::Wrapping, thread::sleep};
 use rfm69::{Rfm69, registers::{Registers, Modulation, ModulationShaping, 
     ModulationType, DataMode, PacketConfig, PacketFormat, 
     PacketDc, PacketFiltering, InterPacketRxDelay, RxBw, RxBwFsk,
@@ -63,7 +63,8 @@ pub struct Radio {
     // and causes pain
     radio: RefCell<MyRfm>,
     my_address: u8,
-    power: i8
+    power: i8,
+    packet_id: Cell<Wrapping<u8>>
 }
 
 impl Radio {
@@ -130,15 +131,17 @@ impl Radio {
         }
         Ok(Radio { radio: RefCell::new(radio), 
             my_address: config.transmitter_id, 
-            power })
+            power,
+            packet_id: Cell::new(Wrapping(0u8)) })
     }
 
     pub fn send(self: &Self, packet: &Packet) -> Result<(),RadioError> {
         self.pre_tx_hook()?;
-        let marshalled = packet.marshal(self.my_address, 0, 0);
+        let marshalled = packet.marshal(self.my_address, self.packet_id.get().0, 0);
         debug!("Sending packet: {:?}, marshalled: {:?}", packet, marshalled);
         let result = self.radio.borrow_mut().send(marshalled.as_slice());
         self.post_tx_hook()?;
+        self.packet_id.set(self.packet_id.get() + Wrapping(1u8));
         result.map_err(From::from)
     }
 

@@ -35,9 +35,16 @@
             "color": "red",
             "attack": 100,
             "sustain": 5000,
+            "release": 200
+        },
+        {
+            "midi": { "Controller": { "channel": 0, "cc": 10 }},
+            "light": { "Effect": "Pop" },
+            "color": "green",
+            "attack": 10,
             "release": 200,
-            "send_note_off": false
+            "targets": [ "pit" ]
         }
-
-    ]
+    ],
+    "clips": {}
 }

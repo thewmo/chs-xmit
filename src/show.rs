@@ -18,7 +18,9 @@ pub struct ShowDefinition {
     pub colors: HashMap<String,Color>,
 
     /// associations between MIDI signals and effects or clips
-    pub mappings: Vec<LightMapping>
+    pub mappings: Vec<LightMapping>,
+
+    pub clips: HashMap<String,Vec<ClipStep>>
 
 }
 
@@ -98,11 +100,11 @@ pub struct LightMapping {
     pub light: LightMappingType,
     pub color: String,
     pub override_clip_color: Option<bool>,
-    pub attack: u32,
-    pub sustain: u32,
-    pub release: u32,
-    pub send_note_off: Option<bool>,
-    pub tempo: Option<u8>,
+    pub attack: Option<u32>,
+    pub sustain: Option<u32>,
+    pub release: Option<u32>,
+    pub one_shot: Option<bool>,
+    pub tempo: Option<f32>,
     pub modulation: Option<u8>,
     /// targets is optional, if absent, all receivers are targets
     pub targets: Option<Vec<serde_json::Value>>,
@@ -114,4 +116,28 @@ impl LightMapping {
         self as *const LightMapping as usize
     }
     
+}
+
+#[derive(Debug,Deserialize)]
+pub enum ClipStep {
+    /// instruction to trigger the contained mapping
+    MappingOn(LightMapping),
+    /// instruction to trigger "off" the "on" mapping at the specified index
+    MappingOff(usize),
+    /// wait the specified number of beats
+    WaitBeats(f32),
+    /// wait the specified number of milliseconds
+    WaitMillis(u32),
+    /// go back to the clip step at the index
+    Loop(usize),
+    /// set the current clip-wide color
+    SetColor(String),
+    /// set the current clip-wide tempo
+    SetTempo(f32),
+    /// stop any mappings and terminate the clip
+    Stop,
+    /// stop another named clip if it's playing
+    StopOther(String),
+    /// terminate the clip
+    End,
 }
