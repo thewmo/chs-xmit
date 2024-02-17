@@ -9,7 +9,7 @@ use std::collections::HashMap;
 
 
 /// this struct maps directly to the show JSON
-#[derive(Debug,Deserialize)]
+#[derive(Debug,Deserialize,Clone)]
 pub struct ShowDefinition {
     /// listing of receivers and their groups and LED counts
     pub receivers: Vec<ReceiverConfiguration>,
@@ -20,8 +20,8 @@ pub struct ShowDefinition {
     /// associations between MIDI signals and effects or clips
     pub mappings: Vec<LightMapping>,
 
+    /// clip definitions
     pub clips: HashMap<String,Vec<ClipStep>>
-
 }
 
 ///
@@ -30,7 +30,7 @@ pub struct ShowDefinition {
 /// at the receiver level. Struct members code for the effect-specific
 /// params that will be sent as param1/param2
 /// 
-#[derive(Debug,Deserialize)]
+#[derive(Debug,Deserialize,Clone)]
 pub enum Effect {
     Pop,
     /// delay quantization controls how many receivers will fire together
@@ -65,7 +65,7 @@ pub enum Effect {
 
 
 /// for a given receiver, what is its id, group name, and led count
-#[derive(Debug,Deserialize)]
+#[derive(Debug,Deserialize,Clone)]
 pub struct ReceiverConfiguration {
     /// the id of the receiver
     pub id: u8,
@@ -78,14 +78,14 @@ pub struct ReceiverConfiguration {
 }
 
 /// the source of a midi mapping whether it be a note or CC (continuous controller)
-#[derive(Debug,Deserialize)]
+#[derive(Debug,Deserialize,Clone)]
 pub enum MidiMappingType {
     Note { channel: u8, note: String },
     Controller { channel: u8, cc: u8 }
 }
 
 /// the target of a mapping, which can be either an effect or a name clip
-#[derive(Debug,Deserialize)]
+#[derive(Debug,Deserialize,Clone)]
 pub enum LightMappingType {
     Effect(Effect),
     Clip(String)
@@ -94,9 +94,9 @@ pub enum LightMappingType {
 #[derive(Debug,Clone,Copy,Deserialize)]
 pub struct Color { pub h: u8, pub s: u8, pub v: u8 }
 
-#[derive(Debug,Deserialize)]
+#[derive(Debug,Deserialize,Clone)]
 pub struct LightMapping {
-    pub midi: MidiMappingType,
+    pub midi: Option<MidiMappingType>,
     pub light: LightMappingType,
     pub color: String,
     pub override_clip_color: Option<bool>,
@@ -118,7 +118,7 @@ impl LightMapping {
     
 }
 
-#[derive(Debug,Deserialize)]
+#[derive(Debug,Deserialize,Clone)]
 pub enum ClipStep {
     /// instruction to trigger the contained mapping
     MappingOn(LightMapping),
@@ -131,7 +131,7 @@ pub enum ClipStep {
     /// go back to the clip step at the index
     Loop(usize),
     /// set the current clip-wide color
-    SetColor(String),
+    SetColor(Color),
     /// set the current clip-wide tempo
     SetTempo(f32),
     /// stop any mappings and terminate the clip

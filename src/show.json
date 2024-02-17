@@ -39,12 +39,24 @@
         },
         {
             "midi": { "Controller": { "channel": 0, "cc": 10 }},
-            "light": { "Effect": "Pop" },
+            "light": { "Clip": "flash" },
             "color": "green",
             "attack": 10,
             "release": 200,
-            "targets": [ "pit" ]
+            "tempo": 120
         }
     ],
-    "clips": {}
+    "clips": {
+        "flash": [
+            { "MappingOn": {
+                "light": { "Effect": "Pop" },
+                "color": "red",
+                "attack": 100,
+                "release": 200 }},
+            { "WaitBeats": 1.0 },
+            { "MappingOff": 0 },
+            { "WaitBeats": 1.0 },
+            { "Loop": 0 }
+        ]
+    }
 }

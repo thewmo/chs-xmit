@@ -1,3 +1,5 @@
+use std::{ops::Range, time::Duration};
+
 use serde::Deserialize;
 
 /// Mappings for a JSON config file that contains settings that are
@@ -45,11 +47,30 @@ pub struct ConfigFile {
 
     /// the amount of time to allow to elapse after the last
     /// show packet before we start periodically sending lights-out packets
-    pub lights_out_delay: f64,
+    pub lights_out_window_open: f32,
+    pub lights_out_window_close: f32,
 
     /// once we are sending lights-out packets, how long to
     /// allow to elapse between packets (1/freq)
-    pub lights_out_period: f64
+    pub lights_out_period: f32
 
+}
+
+/// convert a floating point number of seconds to a Duration
+fn convert_secs(secs: f32) -> Duration {
+    let secs_part = secs as u64;
+    let nanos_part = ((secs - secs_part as f32) * 1_000_000_000.0) as u32;
+    Duration::new(secs_part, nanos_part)
+}
+
+impl ConfigFile {
+
+    pub fn lights_out_window(self: &Self) -> Range<Duration> {
+        convert_secs(self.lights_out_window_open)..convert_secs(self.lights_out_window_close)
+    }
+
+    pub fn lights_out_delay(self: &Self) -> Duration {
+        convert_secs(self.lights_out_period)
+    }
 }
 

@@ -14,8 +14,6 @@ use crate::showstate::ShowState;
 /// This module is where a lot of the action happens. MIDI message
 /// meet show configuration to fire radio packets.
 
-pub const DEFAULT_TICK: Duration = Duration::from_secs(1);
-
 pub enum DirectorMessage {
     /// deliver a payload of a midi event
     MidiMessage { ts: u64, buf: Vec<u8> },
@@ -25,7 +23,6 @@ pub enum DirectorMessage {
 
     /// reload the show config and then reinitialize receivers and show state
     Reload,
-
 }
 
 pub struct Director {
@@ -69,12 +66,12 @@ impl Director {
     fn load_and_run(self: &Self, show_path: &PathBuf) -> anyhow::Result<bool> {
         let file = File::open(&show_path).context("Could not open file")?;
         let show = serde_json::from_reader::<File,ShowDefinition>(file).context("Could not parse file")?;
-        let mut state = ShowState::new(&show, &self.radio).context("Could not validate show structure")?;
+        let state = ShowState::new(&show, &self.radio, &self.config).context("Could not validate show structure")?;
         
         state.configure_receivers(&show)?;
 
         info!("Reset receivers and show state");
-        let mut timeout = DEFAULT_TICK;
+        let mut timeout = Duration::ZERO;
         loop {
             match self.rx.recv_timeout(timeout) {
                 Ok(message) => {
@@ -82,20 +79,19 @@ impl Director {
                         DirectorMessage::Reload => return Ok(true),
                         DirectorMessage::Shutdown => return Ok(false),
                         DirectorMessage::MidiMessage { ts, buf } => {
-                            timeout = state.process_midi(&show, ts, buf)?;
+                            state.process_midi(ts, buf)?;
                         }
                     }
                 }
                 Err(e) => match e {
-                    RecvTimeoutError::Timeout => {
-                        timeout = state.process_tick()?;
-                    },
+                    RecvTimeoutError::Timeout => {},
                     RecvTimeoutError::Disconnected => {
                         error!("Channel closed, exiting show loop");
                         return Ok(false)
                     }
                 }
-            }
+            };
+            timeout = state.tick()?;
         }
     }
 
