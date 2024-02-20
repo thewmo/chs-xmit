@@ -24,6 +24,14 @@ pub mod director;
 pub mod showstate;
 pub mod clip;
 
+// note - the pad controller impersonates an Arturia Minilab 
+// and uses sysex messages like
+// F0 00 20 6B 7F 42 02 00 00 63 00 F7 
+// to manipulate settings. in this case, setting 0 on pad 63 with value 0
+//
+// this can be used to configure the controller based on the show JSON
+// this much of the sysex message is prefix: F0 00 20 6B 7F 42 02 00
+
 const DEFAULT_BUFFER_SIZE: usize = 10;
 
 #[derive(Parser, Debug)]
@@ -64,7 +72,7 @@ fn main() -> anyhow::Result<()> {
 
     // initialize our midi and radio libraries/interfaces
     info!("Initializing MIDI...");
-    let midi_in = midi::midi_init(&config)?;
+    let (midi_in, midi_out) = midi::midi_init(&config)?;
 
     info!("Initializing radio...");
     let mut radio = Radio::init(&config)?;
@@ -89,8 +97,8 @@ fn main() -> anyhow::Result<()> {
 
     let midi_tx = tx.clone();
 
-    if let Some(port) = midi::find_port(&midi_in, &config.midi_port) {
-        let midi_connection = midi_in.connect(&port, "chs-lights-in", 
+    if let Some(ports) = midi::find_ports(&midi_in, &midi_out, &config.midi_port) {
+        let midi_in_connection = midi_in.connect(&ports.0, "chs-lights-in", 
                     move | ts, midi_bytes, _ | 
                         { midi_tx.send(DirectorMessage::MidiMessage { ts, buf: midi_bytes.to_owned() }).unwrap(); }, ()).unwrap();
         
@@ -133,8 +141,9 @@ fn main() -> anyhow::Result<()> {
 
 
         // note the connection must be kept alive until the show is over, 
-        // otherwise midirs will close the connection
-        drop(midi_connection);
+        // otherwise midirs will close the connection. The explicit drop
+        // prevents midi_connection from being dropped prematurely
+        drop(midi_in_connection);
 
         // join the show thread before shutdown
         let _ = join_handle.join();
