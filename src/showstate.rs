@@ -3,7 +3,7 @@ use std::cmp::min;
 use std::rc::Rc;
 use std::time::{Duration,Instant};
 use std::collections::HashMap;
-use std::cell::{Cell, RefCell};
+use std::cell::RefCell;
 use midly::live::LiveEvent;
 use midly::MidiMessage;
 use midly::num::{u4,u7};
@@ -16,6 +16,9 @@ use crate::show::{ClipStep, Color, Effect, LightMapping, LightMappingType, MidiM
 use crate::packet::{Command, Packet, PacketPayload, ShowPacket, GROUP_ID_RANGE};
 use crate::clip::ClipEngine;
 
+const SUSTAIN_CONTROLLER: u8 = 64;
+const TEST_CONTROLLER : u8 = 102;
+
 const ALL_RECIPIENTS: Vec<u8> = vec![];
 
 const GLOBAL_OFF_PACKET: Packet = Packet {
@@ -23,7 +26,12 @@ const GLOBAL_OFF_PACKET: Packet = Packet {
     payload: PacketPayload::Show(ShowPacket::OFF_PACKET)
 };
 
-/// mutable state associated with the show. some things are derived from
+const GLOBAL_TEST_PACKET: Packet = Packet {
+    recipients: &ALL_RECIPIENTS,
+    payload: PacketPayload::Show(ShowPacket::TEST_PACKET)
+};
+
+/// immutable state associated with the show. some things are derived from
 /// the show json, other things (eg receiver and clip state) continuously
 /// change as the show is performed
 /// 
@@ -36,11 +44,11 @@ pub struct ShowState<'a,'b> {
     // reference to the radio
     radio: &'a Radio,
 
-    /// the moment of the last effect we triggered
-    last_effect: Cell<Instant>,
+    /// the show definition
+    show: &'b ShowDefinition,
 
-    /// the last time we sent a timeout-driven "lights out" packet
-    last_lights_out: Cell<Instant>,
+    /// a map from group id to the groups members
+    group_members: HashMap<u8,Vec<u8>>,
 
     /// a map to lookup the u8 ids for named targets
     target_lookup: HashMap<String,u8>,
@@ -50,15 +58,35 @@ pub struct ShowState<'a,'b> {
 
     /// midi channel/cc to light mapping key
     controller_mappings: HashMap<(u4,u7), usize>,
+    
+    /// a map from a named clip to the play state of that clip
+    /// note that the clip engine uses interior mutability so we can treat it as immutable
+    clip_engine: ClipEngine<'b>,
+}
 
+/// mutable state associated with the show (receiver and clip state)
+/// as well as things with references to the immutable show state. 
+/// (including those things in the immutable show state would create 
+/// a self-referential object of which the borrow checker is not fond)
+pub struct MutableShowState<'a> {
+    
+    /// the moment of the last effect we triggered
+    last_effect: Instant,
+
+    /// the last time we sent a timeout-driven "lights out" packet
+    last_lights_out: Instant,
+    
     /// quick lookup from light mapping key to the data about that light mapping
-    light_mappings: HashMap<usize,LightMappingMeta<'b>>,
+    light_mappings: HashMap<usize,LightMappingMeta<'a>>,
 
     /// a map from receiver id to info about what that receiver should be doing right now
     receiver_state: HashMap<u8,Rc<RefCell<ReceiverState>>>,
 
-    /// a map from a named clip to the play state of that clip
-    clip_engine: ClipEngine<'b>
+    /// are we currently buffering effect-off messages
+    sustain: bool,
+
+    /// a buffer of pending effect ids that should be disabled 
+    pending_off: Vec<usize>
 }
 
 pub struct EffectOverrides {
@@ -167,10 +195,8 @@ impl<'a,'b> ShowState<'a,'b> {
         let mut target_lookup: HashMap<String,u8> = HashMap::new();
         let mut group_members: HashMap<u8,Vec<u8>> = HashMap::new();
         let mut group_id = GROUP_ID_RANGE.start;
-        let mut light_mappings: HashMap<usize, LightMappingMeta> = HashMap::new();
         let mut note_mappings: HashMap<(u4,u7), usize> = HashMap::new();
         let mut controller_mappings: HashMap<(u4,u7), usize> = HashMap::new();
-        let mut receiver_state: HashMap<u8,Rc<RefCell<ReceiverState>>> = HashMap::new();
 
         // preprocess receivers
         for r in show.receivers.iter() {
@@ -188,14 +214,10 @@ impl<'a,'b> ShowState<'a,'b> {
                 let group_id = target_lookup.get(group_name).unwrap();
                 group_members.entry(*group_id).or_insert_with(Vec::new).push(r.id);
             }
-            // create a reference-counted receiver state entry for the receiver
-            receiver_state.insert(r.id, Rc::new(RefCell::new(ReceiverState::new(r.id))));
         }
         
-        // preprocess light mappings
+        // build maps from midi triggers to mappings
         for m in show.mappings.iter() {
-            light_mappings.insert(m.get_id(), 
-                ShowState::create_light_mapping_meta(&show, m, &target_lookup, &group_members, &receiver_state)?);
             match &m.midi {
                 Some(MidiMappingType::Note { channel, note }) => {
                     note_mappings.insert(((*channel).into(), ResolvedNote::from_str(&note).unwrap().midi.into()), 
@@ -211,37 +233,106 @@ impl<'a,'b> ShowState<'a,'b> {
             }
         }
 
+        Ok(ShowState { 
+            config,
+            radio,
+            show,
+            group_members,
+            target_lookup,
+            note_mappings, 
+            controller_mappings,
+            clip_engine: ClipEngine::new(&show.clips)
+     })
+    }
+    
+    pub fn create_mutable_state(self: &Self) -> anyhow::Result<MutableShowState> {
+        let mut receiver_state: HashMap<u8,Rc<RefCell<ReceiverState>>> = HashMap::new();
+        let mut light_mappings: HashMap<usize, LightMappingMeta> = HashMap::new();
+
+        for r in self.show.receivers.iter() {
+            receiver_state.insert(r.id, Rc::new(RefCell::new(ReceiverState::new(r.id))));
+        }
+
+        // preprocess light mappings
+        for m in self.show.mappings.iter() {
+            light_mappings.insert(m.get_id(), self.create_light_mapping_meta( m, &receiver_state)?);
+        }
+        
         // preprocess clip-embedded light mappings
-        for clip_steps in show.clips.values() {
+        for clip_steps in self.show.clips.values() {
             for step in clip_steps.iter() {
                 match step {
                     ClipStep::MappingOn(m) => {
-                        light_mappings.insert(m.get_id(), 
-                            ShowState::create_light_mapping_meta(&show, m, &target_lookup, &group_members, &receiver_state)?);
+                        light_mappings.insert(m.get_id(), self.create_light_mapping_meta(m, &receiver_state)?);
                     },
                     _ => {}
                 }
             }
         }
 
-        Ok(ShowState { 
-            config,
-            radio,
-            last_effect: Cell::new(Instant::now()),
-            last_lights_out: Cell::new(Instant::now()),
-            target_lookup,
-            note_mappings, 
-            controller_mappings,
+        Ok(MutableShowState {
+            last_effect: Instant::now(),
+            last_lights_out: Instant::now(),
             light_mappings,
             receiver_state,
-            clip_engine: ClipEngine::new(&show.clips)
-     })
+            sustain: false,
+            pending_off: Vec::<usize>::new()
+        })
+    }
+
+    fn create_light_mapping_meta<'c>(self: &Self,
+        m: &'c LightMapping, 
+        receiver_state: &HashMap<u8,Rc<RefCell<ReceiverState>>>) -> Result<LightMappingMeta<'c>> {
+
+        let resolved_targets = match &m.targets {
+            None => ALL_RECIPIENTS, 
+            Some(tgts) => {
+                let mut result: Vec<u8> = vec![];
+                for json_tgt in tgts.iter() {
+                    let tgt_val = convert_target(json_tgt)?;
+                    let otgt = self.target_lookup.get(&tgt_val);
+                    match otgt {
+                        Some(id) => result.push(*id),
+                        None => return Err(anyhow!("Target in target list does not match any known group or receiver: {}", tgt_val))
+                    }
+                }
+                result
+            }
+        };
+        let resolved_receivers = self.expand_groups(receiver_state, &resolved_targets);
+
+        let resolved_color = self.show.colors.get(&m.color)
+            .ok_or_else(|| anyhow!("Named color: {} not in color map", m.color))?;
+
+        Ok(LightMappingMeta {
+            color: resolved_color.clone(),
+            source: m,
+            targets: resolved_targets,
+            receivers: resolved_receivers
+        })
+
     }
     
+    /// a helper function that expands a target list of u8s to a list of receiver state references
+    /// (ids representing groups are expanded to references to their underlying receivers)
+    fn expand_groups<'c>(self: &Self, receiver_state: &'c HashMap<u8,Rc<RefCell<ReceiverState>>>, targets: &Vec<u8>) 
+    -> Vec<Rc<RefCell<ReceiverState>>> {
+
+        if targets.is_empty() {
+            receiver_state.values().map(|rc| rc.clone()).collect()
+        } else {
+            targets.iter().flat_map(|e|   
+                self.group_members.get(&e)
+                    .map_or_else(|| vec![*e].into_iter(), |v| v.clone().into_iter()))
+                    .map(|k| receiver_state.get(&k).unwrap().clone())
+                    .collect()
+        }
+    }
+
     /// Send control packets to all the receivers telling them
     /// what group they're in and how many leds they have
-    pub fn configure_receivers(self: &Self, show: &ShowDefinition) -> Result<(), RadioError> {
-        for receiver in show.receivers.iter() {
+    pub fn configure_receivers(self: &Self) -> Result<(), RadioError> {
+        for receiver in self.show.receivers.iter() {
 
             if let Some(group_name) = &receiver.group_name {
                 self.radio.send(&Packet {
@@ -270,20 +361,19 @@ impl<'a,'b> ShowState<'a,'b> {
         Ok(())
     }
     
-    pub fn process_midi(self: &Self, _ts: u64, buf: Vec<u8>) -> anyhow::Result<()> {
-        let midi_event = midly::live::LiveEvent::parse(&buf)?;
+    pub fn process_midi(self: &Self, midi_event: &LiveEvent, state: &mut MutableShowState) -> anyhow::Result<()> {
         debug!("Received MIDI event: {:?}", midi_event);
         match midi_event {
             LiveEvent::Midi { channel, message } => {
                 match message {
                     MidiMessage::Controller { controller, value } => {
-                        self.process_controller(channel, controller, value)
+                        self.process_controller(*channel, *controller, *value, state)
                     },
                     MidiMessage::NoteOn { key, vel } => {
-                        self.process_note_on(channel, key, vel)
+                        self.process_note_on(*channel, *key, *vel, state)
                     },
                     MidiMessage::NoteOff { key, vel } => {
-                        self.process_note_off(channel, key, vel)
+                        self.process_note_off(*channel, *key, *vel, state)
                     },
                     _ => Ok(())
                 }
@@ -292,40 +382,80 @@ impl<'a,'b> ShowState<'a,'b> {
         }
     }
 
-    fn process_controller(self: &Self, channel: u4, controller: u7, value: u7) -> anyhow::Result<()> {
+    fn process_special_controllers(self: &Self, channel: u4, controller: u7, value: u7, state: &mut MutableShowState) -> anyhow::Result<bool> {
+        if channel == self.config.midi_control_channel {
+            match controller.into() {
+                SUSTAIN_CONTROLLER => {
+                    if value == 127 {
+                        info!("sustain activated, will buffer midi deactivations");
+                        state.sustain = true;
+                    } else if value == 0 {
+                        info!("sustain released, performing buffered deactivations");
+                        state.sustain = false;
+                        // clone to appease the borrow checker
+                        for e in state.pending_off.clone().iter() {
+                            self.deactivate(*e, state)?;
+                        }
+                        state.pending_off.clear();
+                    }
+                    Ok(true)
+                },
+                TEST_CONTROLLER => {
+                    if value == 127 {
+                        info!("midi test received, firing test packet");
+                        self.radio.send(&GLOBAL_TEST_PACKET)?;
+                        state.last_effect = Instant::now();
+                    } else {
+                        self.radio.send(&GLOBAL_OFF_PACKET)?;
+                    }
+                    Ok(true)
+                },
+                _ => Ok(false)
+            }
+        } else {
+            Ok(false)
+        }
+    }
+
+    fn process_controller(self: &Self, channel: u4, controller: u7, value: u7, state: &mut MutableShowState) -> anyhow::Result<()> {
+        if self.process_special_controllers( channel, controller, value, state)? {
+            return Ok(())
+        }
         match self.controller_mappings.get(&(channel, controller)) {
             Some(id) => match u8::from(value) {
-                127 => self.activate(*id, None),
-                0 => self.deactivate(*id),
+                127 => self.activate(*id, None, state),
+                0 => self.deactivate_from_midi(*id, state),
                 _ => Ok(())
             },
             _ => Ok(())
         }
     }
 
-    fn process_note_on(self: &Self, channel: u4, key: u7, _velocity: u7) -> anyhow::Result<()> {
+    fn process_note_on(self: &Self, channel: u4, key: u7, _velocity: u7, state: &mut MutableShowState) -> anyhow::Result<()> {
         match self.note_mappings.get(&(channel, key)) {
-            Some(id) => self.activate(*id, None),
+            Some(id) => self.activate(*id, None, state),
             _ => Ok(())
         }
     }
 
-    fn process_note_off(self: &Self, channel: u4, key: u7, _velocity: u7) -> anyhow::Result<()> {
+    fn process_note_off(self: &Self, channel: u4, key: u7, _velocity: u7, state: &mut MutableShowState) -> anyhow::Result<()> {
         match self.note_mappings.get(&(channel, key)) {
-            Some(id) => self.deactivate(*id),
+            Some(id) => self.deactivate_from_midi(*id, state),
             _ => Ok(())
         }
     }
 
-    pub fn activate(self: &Self, mapping_id: usize, overrides: Option<EffectOverrides>) -> anyhow::Result<()> {
-        let mapping_meta = self.light_mappings.get(&mapping_id).unwrap();
-        match &mapping_meta.source.light {
-            LightMappingType::Effect(effect) => self.activate_effect(&mapping_meta, &effect, overrides),
-            LightMappingType::Clip(clip) => self.activate_clip( &mapping_meta, &clip)
+    pub fn activate(self: &Self, mapping_id: usize, overrides: Option<EffectOverrides>, state: &mut MutableShowState) -> anyhow::Result<()> {        
+        let light = &state.light_mappings.get(&mapping_id).unwrap().source.light;
+        match light {
+            LightMappingType::Effect(effect) => self.activate_effect(mapping_id, &effect, overrides, state),
+            LightMappingType::Clip(clip) => self.activate_clip( mapping_id, &clip, state)
         }
     }
 
-    fn activate_effect(self: &Self, mapping_meta: &LightMappingMeta, effect: &Effect, overrides: Option<EffectOverrides>) -> anyhow::Result<()> {
+    fn activate_effect(self: &Self, mapping_id: usize, effect: &Effect, overrides: Option<EffectOverrides>, state: &mut MutableShowState) -> anyhow::Result<()> {
+        let mapping_meta = state.light_mappings.get(&mapping_id).unwrap();
+        info!("activate effect: {:#?}, color: {}, targets: {:#?}", effect, mapping_meta.source.color, mapping_meta.source.targets);
         let mut show_packet = ShowPacket {
             effect: effect.to_effect_id(),
             color: overrides.as_ref().and_then(|o| o.color).unwrap_or(mapping_meta.color),
@@ -344,52 +474,64 @@ impl<'a,'b> ShowState<'a,'b> {
         self.radio.send(&packet)?;
         // update the receivers triggered by this mapping as active via this mapping
         mapping_meta.receivers.iter().for_each(|r| r.borrow_mut().activate(&mapping_meta.source));
-        self.last_effect.set(Instant::now());
+        state.last_effect = Instant::now();
         Ok(())
     }
 
     /// perform time-based logic - advance playing clips, and implement lights-out logic. called
     /// on every iteration of the show loop, returns the maximum amout of time to wait before
     /// calling tick again.
-    pub fn tick(self: &Self) -> anyhow::Result<Duration> {
+    pub fn tick(self: &Self, state: &mut MutableShowState) -> anyhow::Result<Duration> {
         let now = Instant::now();
 
         // advance any clips that are playing
-        let play_clips_at = self.clip_engine.play_clips( &self);
+        let play_clips_at = self.clip_engine.play_clips( &self, state);
 
         // if no receivers and no clips are active, and it's been n (configurable) seconds since the last midi event,
         // send a lights-out packet once every m (configurable) seconds
-        let receiver_active = self.receiver_state.values().any(|rs| rs.borrow().is_active());
+        let receiver_active = state.receiver_state.values().any(|rs| rs.borrow().is_active());
         if !receiver_active && !self.clip_engine.is_playing() && 
-            self.config.lights_out_window().contains(&(now - self.last_effect.get())) && 
-            now - self.last_lights_out.get() >= self.config.lights_out_delay() {
+            self.config.lights_out_window().contains(&(now - state.last_effect)) && 
+            now - state.last_lights_out >= self.config.lights_out_delay() {
 
-            info!("Sending lights out...");
+            info!("lights out");
             self.radio.send(&GLOBAL_OFF_PACKET)?;
-            self.last_lights_out.set(now);
+            state.last_lights_out = now;
         }
         let lights_out_delay = self.config.lights_out_delay();
         Ok(min(lights_out_delay, 
             play_clips_at.map_or(lights_out_delay, |play_clips_at| play_clips_at - now)))
     }
 
-    fn activate_clip(self: &Self, light_mapping: &LightMappingMeta, clip: &str) -> anyhow::Result<()> {
+    fn activate_clip(self: &Self, mapping_id: usize, clip: &str, state: &mut MutableShowState) -> anyhow::Result<()> {
+        let light_mapping = state.light_mappings.get(&mapping_id).unwrap();
         let override_color = if light_mapping.source.override_clip_color.unwrap_or(false) 
             { Some(light_mapping.color) } else { None };
         self.clip_engine.start_clip(&clip, override_color, light_mapping.source.tempo.unwrap_or(120f32))
     }
 
-    pub fn deactivate(self: &Self, mapping_id: usize) -> anyhow::Result<()>{
-        let mapping_meta = self.light_mappings.get(&mapping_id).unwrap();
-        match &mapping_meta.source.light {
-            LightMappingType::Effect(e) => self.deactivate_effect(mapping_meta, e),
-            LightMappingType::Clip(c) => self.deactivate_clip(mapping_meta,c)
+    /// a wrapper around deactivate calls coming from a live source,
+    /// as such calls need to be buffered if we're in "sustain" mode
+    fn deactivate_from_midi(self: &Self, mapping_id: usize, state: &mut MutableShowState) -> anyhow::Result<()> {
+        if state.sustain {
+            state.pending_off.push(mapping_id);
+            Ok(())
+        } else {
+            self.deactivate(mapping_id, state)
         }
     }
 
-    fn deactivate_effect(self: &Self, mapping_meta: &LightMappingMeta, _effect: &Effect) -> anyhow::Result<()> {
-        
+    pub fn deactivate(self: &Self, mapping_id: usize, state: &mut MutableShowState) -> anyhow::Result<()>{
+        let mapping_meta = state.light_mappings.get(&mapping_id).unwrap();
+        match &mapping_meta.source.light {
+            LightMappingType::Effect(e) => self.deactivate_effect(mapping_meta, e),
+            LightMappingType::Clip(c) => self.clip_engine.stop_clip(&c, &self, state)
+        }
+    }
+
+    fn deactivate_effect(self: &Self, mapping_meta: &LightMappingMeta, effect: &Effect) -> anyhow::Result<()> {
         if !mapping_meta.source.one_shot.unwrap_or(false) {
+            info!("deactivate effect: {:#?}, color: {}, targets: {:#?}", effect, mapping_meta.source.color, mapping_meta.source.targets);
             let simple_off_path = mapping_meta.receivers.iter().all(
                 |r| r.borrow().activated_by(&mapping_meta.source));
 
@@ -406,67 +548,13 @@ impl<'a,'b> ShowState<'a,'b> {
                 payload: PacketPayload::Show(ShowPacket::OFF_PACKET),
                 recipients: dynamic_recipients.as_ref().unwrap_or(&mapping_meta.targets)
             };
+            debug!("deactivate recipients list computed to be: {:#?}", packet.recipients);
             self.radio.send(&packet)?;
+            // update each receiver state as deactivated
             mapping_meta.receivers.iter().for_each(|r| 
                 { r.borrow_mut().deactivate(&mapping_meta.source); });
         }
         Ok(())
     }
-
-    fn deactivate_clip(self: &Self, _light_mapping: &LightMappingMeta, clip: &str) -> anyhow::Result<()> {
-        self.clip_engine.stop_clip(&clip, &self)
-    }
-
-    /// a helper function that expands a target list of u8s to a list of receiver state references
-    /// (ids representing groups are expanded to references to their underlying receivers)
-    fn expand_groups<'c>(group_members: &HashMap<u8,Vec<u8>>, receiver_state: &'c HashMap<u8,Rc<RefCell<ReceiverState>>>, targets: &Vec<u8>) 
-    -> Vec<Rc<RefCell<ReceiverState>>> {
-
-        if targets.is_empty() {
-            receiver_state.values().map(|rc| rc.clone()).collect()
-        } else {
-            targets.iter().flat_map(|e|   
-                group_members.get(&e)
-                    .map_or_else(|| vec![*e].into_iter(), |v| v.clone().into_iter()))
-                    .map(|k| receiver_state.get(&k).unwrap().clone())
-                    .collect()
-        }
-    }
-
-    fn create_light_mapping_meta<'c>(show: &ShowDefinition,
-        m: &'c LightMapping, 
-        target_lookup: &HashMap<String,u8>, 
-        group_members: &HashMap<u8,Vec<u8>>, 
-        receiver_state: &HashMap<u8,Rc<RefCell<ReceiverState>>>) -> Result<LightMappingMeta<'c>> {
-
-        let resolved_targets = match &m.targets {
-            None => ALL_RECIPIENTS, // "all receivers" is modeled as an empty target
-            Some(tgts) => {
-                let mut result: Vec<u8> = vec![];
-                for json_tgt in tgts.iter() {
-                    let tgt_val = convert_target(json_tgt)?;
-                    let otgt = target_lookup.get(&tgt_val);
-                    match otgt {
-                        Some(id) => result.push(*id),
-                        None => return Err(anyhow!("Target in target list does not match any known group or receiver: {}", tgt_val))
-                    }
-                }
-                result
-            }
-        };
-        let resolved_receivers = 
-            ShowState::expand_groups(group_members, receiver_state, &resolved_targets);
-
-        let resolved_color = show.colors.get(&m.color)
-            .ok_or_else(|| anyhow!("Named color: {} not in color list", m.color))?;
-
-        Ok(LightMappingMeta {
-            color: resolved_color.clone(),
-            source: m,
-            targets: resolved_targets,
-            receivers: resolved_receivers
-        })
-
-    }
-
+    
 }

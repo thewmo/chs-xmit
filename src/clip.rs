@@ -1,6 +1,6 @@
 use std::{cell::RefCell, collections::{HashMap, HashSet}, time::{Duration, Instant}};
 use log::{info,error};
-use crate::{show::{ClipStep, Color}, showstate::{EffectOverrides, ShowState}};
+use crate::{show::{ClipStep, Color}, showstate::{EffectOverrides, MutableShowState, ShowState}};
 
 pub struct ClipEngine<'a> {
     clip_state: HashMap<String, RefCell<ClipState<'a>>>
@@ -20,16 +20,16 @@ impl <'a> ClipEngine<'a> {
         self.clip_state.get(clip_name).unwrap().borrow_mut().start(override_color, tempo)
     }
 
-    pub fn stop_clip(self: &Self, clip_name: &str, show_state: &ShowState) -> anyhow::Result<()> {
+    pub fn stop_clip(self: &Self, clip_name: &str, show_state: &ShowState, mut_state: &mut MutableShowState) -> anyhow::Result<()> {
         info!("Stopping clip: {}", clip_name);
-        self.clip_state.get(clip_name).unwrap().borrow_mut().stop(show_state)
+        self.clip_state.get(clip_name).unwrap().borrow_mut().stop(show_state, mut_state)
     }
 
-    pub fn play_clips(self: &Self, show_state: &ShowState) -> Option<Instant> {
+    pub fn play_clips(self: &Self, show_state: &ShowState, mut_state: &mut MutableShowState) -> Option<Instant> {
 
         let mut play_again_at: Option<Instant> = None;
         for (_clip_name, state) in self.clip_state.iter() {
-            let play_this_again_at = state.borrow_mut().play(show_state, self);
+            let play_this_again_at = state.borrow_mut().play(show_state, self, mut_state);
             if play_this_again_at.is_some() && (play_again_at.is_none() || play_this_again_at.unwrap() < play_again_at.unwrap()) {
                 play_again_at = play_this_again_at;
             }
@@ -80,7 +80,7 @@ impl <'a> ClipState<'a> {
         Ok(())
     }
 
-    pub fn play(self: &mut Self, show_state: &ShowState, engine: &ClipEngine) -> Option<Instant> {
+    pub fn play(self: &mut Self, show_state: &ShowState, engine: &ClipEngine, mut_state: &mut MutableShowState) -> Option<Instant> {
         let now = Instant::now();
         while self.playing {
             if self.advance_at > now {
@@ -95,7 +95,7 @@ impl <'a> ClipState<'a> {
                         sustain: None,
                         release: None
                     });
-                    let _ = show_state.activate(mapping.get_id(), overrides);
+                    let _ = show_state.activate(mapping.get_id(), overrides, mut_state);
                     if !mapping.one_shot.unwrap_or(false) {
                         self.active_mappings.insert(mapping.get_id());
                     }
@@ -104,7 +104,7 @@ impl <'a> ClipState<'a> {
                 },
                 ClipStep::MappingOff(index) => {
                     if let ClipStep::MappingOn(mapping) = &self.steps[*index] {
-                        let _ = show_state.deactivate(mapping.get_id());
+                        let _ = show_state.deactivate(mapping.get_id(), mut_state);
                         self.active_mappings.remove(&mapping.get_id());
                     } else {
                         error!("Mapping off step at index: {} does not point to mapping on step with index: {}", self.step, *index);
@@ -126,10 +126,10 @@ impl <'a> ClipState<'a> {
                     self.step = self.step + 1;
                 },
                 ClipStep::Stop => {
-                    let _ = self.stop(show_state);
+                    let _ = self.stop(show_state, mut_state);
                 },
                 ClipStep::StopOther(name) => {
-                    let _ = engine.stop_clip(name, show_state);
+                    let _ = engine.stop_clip(name, show_state, mut_state);
                     self.step = self.step + 1;
                 },
                 ClipStep::WaitBeats(beats) => {
@@ -145,9 +145,9 @@ impl <'a> ClipState<'a> {
         None
     }
 
-    pub fn stop(self: &mut Self, show_state: &ShowState) -> anyhow::Result<()> {
+    pub fn stop(self: &mut Self, show_state: &ShowState, mut_state: &mut MutableShowState) -> anyhow::Result<()> {
         for id in self.active_mappings.drain() {
-            show_state.deactivate(id)?;
+            show_state.deactivate(id, mut_state)?;
         }
         self.playing = false;
         self.step = 0;

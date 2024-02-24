@@ -2,6 +2,8 @@ use std::path::PathBuf;
 use anyhow::Context;
 use crossbeam_channel::Receiver;
 use crossbeam_channel::RecvTimeoutError;
+use midly::live::LiveEvent;
+use midly::MidiMessage;
 use std::fs::File;
 use log::{debug,info,error};
 use std::time::Duration;
@@ -13,6 +15,8 @@ use crate::showstate::ShowState;
 
 /// This module is where a lot of the action happens. MIDI message
 /// meet show configuration to fire radio packets.
+
+const RESET_CONTROLLER: u8 = 103;
 
 pub enum DirectorMessage {
     /// deliver a payload of a midi event
@@ -67,10 +71,10 @@ impl Director {
         let file = File::open(&show_path).context("Could not open file")?;
         let show = serde_json::from_reader::<File,ShowDefinition>(file).context("Could not parse file")?;
         let state = ShowState::new(&show, &self.radio, &self.config).context("Could not validate show structure")?;
-        
-        state.configure_receivers(&show)?;
+        let mut mutable_state = state.create_mutable_state().context("Could not validate show structure")?;
+        state.configure_receivers()?;
 
-        info!("Reset receivers and show state");
+        info!("reset receivers and show state");
         let mut timeout = Duration::ZERO;
         loop {
             match self.rx.recv_timeout(timeout) {
@@ -78,20 +82,31 @@ impl Director {
                     match message {
                         DirectorMessage::Reload => return Ok(true),
                         DirectorMessage::Shutdown => return Ok(false),
-                        DirectorMessage::MidiMessage { ts, buf } => {
-                            state.process_midi(ts, buf)?;
+                        DirectorMessage::MidiMessage { ts: _, buf } => {
+                            let midi_event = midly::live::LiveEvent::parse(&buf)?;
+                            if let LiveEvent::Midi{ channel, message } = midi_event {
+                                if channel == self.config.midi_control_channel {
+                                    if let MidiMessage::Controller { controller, value } = message {
+                                        if controller == RESET_CONTROLLER && value == 127 {
+                                            info!("midi reset received");
+                                            return Ok(true)
+                                        }
+                                    }
+                                }
+                            }
+                            state.process_midi(&midi_event, &mut mutable_state)?;
                         }
                     }
                 }
                 Err(e) => match e {
                     RecvTimeoutError::Timeout => {},
                     RecvTimeoutError::Disconnected => {
-                        error!("Channel closed, exiting show loop");
+                        error!("channel closed, exiting show loop");
                         return Ok(false)
                     }
                 }
             };
-            timeout = state.tick()?;
+            timeout = state.tick(&mut mutable_state)?;
         }
     }
 

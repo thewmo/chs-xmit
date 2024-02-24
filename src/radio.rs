@@ -29,7 +29,6 @@ use crate::packet::Packet;
 // rpi rf69 bonnet connects reset to GPIO25
 const RESET_PIN: u64 = 25;
 
-//const FREQ: u32 = 427_000_000; // 427 MHz
 const BIT_RATE: u32 = 250_000; // 250 kbps
 const FREQ_DEVIATION: u32 = 250_000; // 250 kHz
 const PREAMBLE_LENGTH: u16 = 4;
@@ -52,8 +51,6 @@ const RX_BW: RxBw<RxBwFsk> = RxBw {
     dcc_cutoff: rfm69::registers::DccCutoff::Percent0dot125,
     rx_bw: RxBwFsk::Khz500dot0
 };
-//const NODE_ADDRESS: u8 = 5;
-//const SETTLE_TIME: Duration = Duration::from_millis(10); // time to let the radio settle between config changes/resets
 
 type MyRfm = Rfm69<rfm69::NoCs, rfm69::SpiTransactional<Spidev>>;
 
@@ -75,6 +72,10 @@ impl Radio {
         // out of reset
         let reset_pin = SysfsPin::new(RESET_PIN);
         reset_pin.export()?;
+        // the first time we run after a reboot, the export takes some time te be
+        // effective - otherwise a permissions error will result from the call below.
+        // so we have to sleep a little bit. See https://github.com/rust-embedded/rust-sysfs-gpio/issues/5
+        sleep(Duration::from_millis(100));
 
         // this will configure the pin as output and high (placing the radio in reset)
         reset_pin.set_direction(Direction::High)?;

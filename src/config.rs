@@ -37,6 +37,10 @@ pub struct ConfigFile {
     /// provided will be matched against the port name as a prefix
     pub midi_port: String,
 
+    /// the midi channel number to care about for out-of-show controls
+    /// eg, sustain, test, reset
+    pub midi_control_channel: u8,
+
     /// the path to the show file to load on startup
     pub show_file: String,
 

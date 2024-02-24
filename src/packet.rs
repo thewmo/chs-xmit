@@ -280,4 +280,15 @@ impl ShowPacket {
         tempo: 0
     };
 
+    pub const TEST_PACKET: ShowPacket = ShowPacket {
+        effect: EffectId::BatteryTest,
+        color: Color { h: 96, s: 255, v: 255 },
+        attack: 25,
+        sustain: 158,
+        release: 25,
+        param1: 0,
+        param2: 0,
+        tempo: 0
+    };
+
 }

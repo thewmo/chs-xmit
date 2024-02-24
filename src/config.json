@@ -6,6 +6,7 @@
     "settle_time_millis": 10,
     "midi_client_name": "chs-lights",
     "midi_port": "W-P64",
+    "midi_control_channel": 0,
     "show_file": "./src/show.json",
     "lights_out_window_open": 5,
     "lights_out_window_close": 60,
