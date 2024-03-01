@@ -31,6 +31,8 @@ pub enum EffectId {
     CircularChase = 14,
     BatteryTest = 15,
     Rainbow = 16,
+    Twinkle = 17,
+    DigitalPin = 18,
 }
 
 impl Effect {
@@ -51,7 +53,9 @@ impl Effect {
             Effect::Grass {..} => EffectId::Grass,
             Effect::CircularChase {..} => EffectId::CircularChase,
             Effect::BatteryTest => EffectId::BatteryTest,
-            Effect::Rainbow {..} => EffectId::Rainbow
+            Effect::Rainbow {..} => EffectId::Rainbow,
+            Effect::Twinkle {..} => EffectId::Twinkle,
+            Effect::DigitalPin {..} => EffectId::DigitalPin,
         }
     }
 
@@ -89,9 +93,9 @@ impl Effect {
                 packet.param1 = *stride;
                 packet.param2 = *tempo_division;
             },
-            Effect::Wave { alternate_hue, colorspace_fraction } => {
-                packet.param1 = *alternate_hue;
-                packet.param2 = *colorspace_fraction;
+            Effect::Wave { alternate_hue, alternate_brightness, colorspace_phase, colorspace_range } => {
+                packet.param1 = *alternate_hue | (*alternate_brightness >> 4);
+                packet.param2 = *colorspace_range | (*colorspace_phase >> 4);
             },
             Effect::PiezoTrigger { flash_decay, threshold } => {
                 packet.param1 = *flash_decay;
@@ -112,6 +116,13 @@ impl Effect {
             Effect::CircularChase { chase_length, reverse } => {
                 packet.param1 = *chase_length;
                 packet.param2 = if *reverse { 1 } else { 0 };
+            },
+            Effect::Twinkle { twinkle_brightness, twinkle_factor} => {
+                packet.param1 = *twinkle_brightness;
+                packet.param2 = (*twinkle_factor * 256f32) as u8;
+            },
+            Effect::DigitalPin { pin } => {
+                packet.param1 = *pin;
             }
             _ => {}
         }

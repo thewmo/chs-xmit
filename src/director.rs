@@ -7,6 +7,7 @@ use midly::MidiMessage;
 use std::fs::File;
 use log::{debug,info,error};
 use std::time::Duration;
+use json_comments::StripComments;
 
 use crate::show::ShowDefinition;
 use crate::config::ConfigFile;
@@ -69,7 +70,7 @@ impl Director {
 
     fn load_and_run(self: &Self, show_path: &PathBuf) -> anyhow::Result<bool> {
         let file = File::open(&show_path).context("Could not open file")?;
-        let show = serde_json::from_reader::<File,ShowDefinition>(file).context("Could not parse file")?;
+        let show: ShowDefinition = serde_json::from_reader(StripComments::new(file)).context("Could not parse file")?;
         let state = ShowState::new(&show, &self.radio, &self.config).context("Could not validate show structure")?;
         let mut mutable_state = state.create_mutable_state().context("Could not validate show structure")?;
         state.configure_receivers()?;

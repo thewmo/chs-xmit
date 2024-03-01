@@ -2,105 +2,634 @@
     "colors": {
         "red": { "h": 0, "s": 255, "v": 255 },
         "white": { "h": 0, "s": 0, "v": 255 },
+        "dimwhite": { "h": 0, "s": 0, "v": 32 },
         "orange": { "h": 32, "s": 255, "v": 255 },
         "yellow": { "h": 64, "s": 255, "v": 255 },
         "green": { "h": 96, "s": 255, "v": 255 },
-        "aqua": { "h": 128, "s": 255, "v": 255 },
+        "darkgreen": { "h": 128, "s": 255, "v": 64 },
+	"aqua": { "h": 128, "s": 255, "v": 255 },
+        "blackaqua": { "h": 128, "s": 255, "v": 0 },
         "blue": { "h": 160, "s": 255, "v": 255 },
+        "darkblue": { "h": 160, "s": 255, "v": 64 },
+        "blackblue": { "h": 160, "s": 255, "v": 0 },
         "purple": { "h": 192, "s": 255, "v": 255 },
         "pink": { "h": 224, "s": 255, "v": 255 }
     },
 
-    "receivers" [
+    "receivers": [
         {
             "name": "bells",
             "id": 91,
-            "group_name": "pit",
+            "group_name": "pit_front",
             "led_count": 30
         },
         {
             "name": "vibe_1_1",
             "id": 130,
-            "group_name": "pit",
+            "group_name": "pit_front",
             "led_count": 30
         },
         {
-            "name": "vibe 1_2",
+            "name": "vibe_1_2",
             "id": 84,
-            "group_name": "pit",
+            "group_name": "pit_front",
             "led_count": 30
         },
         {
             "name": "vibe_2_1",
             "id": 126,
-            "group_name": "pit",
+            "group_name": "pit_front",
             "led_count": 30
         },
         {
             "name": "vibe_2_2",
             "id": 85,
-            "group_name": "pit",
+            "group_name": "pit_front",
             "led_count": 30
         },
         {
             "name": "marimba_1_1",
             "id": 169,
-            "group_name": "pit",
+            "group_name": "pit_front",
             "led_count": 30
         },
         {
             "name": "marimba_1_2",
             "id": 89,
-            "group_name": "pit",
+            "group_name": "pit_front",
             "led_count": 30
         },
         {
             "name": "marimba_1_3",
             "id": 131,
-            "group_name": "pit",
+            "group_name": "pit_front",
             "led_count": 30
         },
         {
             "name": "marimba_2_1",
             "id": 96,
-            "group_name": "pit",
+            "group_name": "pit_front",
             "led_count": 30
         },
         {
             "name": "marimba_2_2",
             "id": 163,
-            "group_name": "pit",
+            "group_name": "pit_front",
             "led_count": 30
         },
         {
             "name": "marimba_2_3",
             "id": 123,
-            "group_name": "pit",
+            "group_name": "pit_front",
             "led_count": 30
         },
         {
             "name": "marimba_3_1",
-            "id": 100,
-            "group_name": "pit",
+            "id": 153,
+            "group_name": "pit_front",
             "led_count": 30
         },
         {
             "name": "marimba_3_2",
-            "id": 129,
-            "group_name": "pit",
+            "id": 204,
+            "group_name": "pit_front",
             "led_count": 30
         },
         {
             "name": "marimba_3_3",
-            "id": 132,
-            "group_name": "pit",
+            "id": 171,
+            "group_name": "pit_front",
             "led_count": 30
         },
+
+        // begin back row
+
         {
             "name": "vibe_3_1",
             "id": 91,
-            "group_name": "pit",
+            "group_name": "pit_back",
             "led_count": 30
+        },
+        {
+            "name": "vibe_3_2",
+            "id": 145,
+            "group_name": "pit_back",
+            "led_count": 30
+        },
+        {
+            "name": "vibe_4_1",
+            "id": 155,
+            "group_name": "pit_back",
+            "led_count": 30
+        },
+        {
+            "name": "vibe_4_2",
+            "id": 170,
+            "group_name": "pit_back",
+            "led_count": 30
+        },
+        {
+            "name": "xylo_1",
+            "id": 152,
+            "group_name": "pit_back",
+            "led_count": 30
+        },
+        {
+            "name": "xylo_2",
+            "id": 115,
+            "group_name": "pit_back",
+            "led_count": 30
+        },
+        {
+            "name": "marimba_4_1",
+            "id": 133,
+            "group_name": "pit_back",
+            "led_count": 30
+        },
+        {
+            "name": "marimba_4_2",
+            "id": 127,
+            "group_name": "pit_back",
+            "led_count": 30
+        },
+        {
+            "name": "marimba_4_3",
+            "id": 142,
+            "group_name": "pit_back",
+            "led_count": 30
+        },
+        {
+            "name": "timp_1_1",
+            "id": 88,
+            "group_name": "pit_back",
+            "led_count": 30
+        },
+        {
+            "name": "timp_1_2",
+            "id": 92,
+            "group_name": "pit_back",
+            "led_count": 30
+        },
+        {
+            "name": "timp_2_1",
+            "id": 129,
+            "group_name": "pit_back",
+            "led_count": 30
+        },
+        {
+            "name": "timp_2_2",
+            "id": 86,
+            "group_name": "pit_back",
+            "led_count": 30
+        },
+        {
+            "name": "timp_3_1",
+            "id": 94,
+            "group_name": "pit_back",
+            "led_count": 30
+        },
+        {
+            "name": "timp_3_2",
+            "id": 167,
+            "group_name": "pit_back",
+            "led_count": 30
+        },
+        {
+            "name": "timp_4_1",
+            "id": 162,
+            "group_name": "pit_back",
+            "led_count": 30
+        },
+        {
+            "name": "timp_4_2",
+            "id": 185,
+            "group_name": "pit_back",
+            "led_count": 30
+        },
+        {
+            "name": "synth_1",
+            "id": 166,
+            "group_name": "pit_back",
+            "led_count": 30
+        },
+        {
+            "name": "synth_2",
+            "id": 121,
+            "group_name": "pit_back",
+            "led_count": 30
+        },
+
+        //
+        // Prop receivers
+        //
+
+        {
+            "name": "stars_1",
+            "id": 117,
+            "group_name": "stars",
+            "led_count": 36
+        },
+        {
+            "name": "stars_2",
+            "id": 161,
+            "group_name": "stars",
+            "led_count": 36
+        },
+        {
+            "name": "stars_3",
+            "id": 98,
+            "group_name": "stars",
+            "led_count": 18
+        },
+        {
+            "name": "screen_1",
+            "id": 254, // TBD
+            "group_name": "screens",
+            "led_count": 100
+        },
+        {
+            "name": "screen_2",
+            "id": 254, // TBD
+            "group_name": "screens",
+            "led_count": 36
+        },
+        {
+            "name": "screen_3",
+            "id": 254, // TBD
+            "group_name": "screens",
+            "led_count": 18
+        },
+        {
+            "name": "lighthouse",
+            "id": 87,
+            "led_count": 1
+        },
+
+        //
+        // Battery receivers
+        //
+
+        {
+            "name": "snare_1",
+            "id": 95,
+            "group_name": "battery",
+            "led_count": 60
+        },
+        {
+            "name": "snare_2",
+            "id": 186,
+            "group_name": "battery",
+            "led_count": 60
+        },
+        {
+            "name": "tenor",
+            "id": 110,
+            "group_name": "battery",
+            "led_count": 90
+        },
+        {
+            "name": "bass_1",
+            "id": 95,
+            "group_name": "battery",
+            "led_count": 71
+        },
+        {
+            "name": "bass_2",
+            "id": 93,
+            "group_name": "battery",
+            "led_count": 81
+        },
+        {
+            "name": "bass_3",
+            "id": 119,
+            "group_name": "battery",
+            "led_count": 90
+        },
+        {
+            "name": "bass_4",
+            "id": 83,
+            "group_name": "battery",
+            "led_count": 108
         }
-    ]
+    ],
+
+    "mappings": [
+
+        // 
+        // FIRST MOVEMENT
+        //
+
+        {
+            "cue": "A1 - all ensemble hit",
+            "midi": { "Controller": { "channel": 0, "cc": 10 }},
+            "light": { "Effect": "Pop" },
+            "color": "white",
+            "release": 250,
+            "targets": [ "pit_front", "pit_back", "battery" ]
+        },
+        {
+            "cue": "A2 - bass feature - hold",
+            "midi": { "Controller": { "channel": 0, "cc": 11 }},
+            "light": { "Effect": "Pop" },
+            "color": "white",
+            "release": 250,
+            "targets": [ "bass_1", "bass_2", "bass_3", "bass_4" ]
+        },
+        {
+            "cue": "A3 - lighthouse",
+            "midi": { "Controller": { "channel": 0, "cc": 12 }},
+            "light": { "Effect": { "DigitalPin": { "pin": 5 }} },
+            "color": "white",
+            "targets": [ "lighthouse" ]
+        },
+        {
+            "cue": "A4 - 6-count ripple",
+            "midi": { "Controller": { "channel": 0, "cc": 13 }},
+            "light": { "Clip": "opener-ripple-a4" },
+            "tempo": 175,
+            "color": "white"
+        },
+        {
+            "cue": "A5 - all fade",
+            "midi": { "Controller": { "channel": 0, "cc": 14 }},
+            "light": { "Effect": "Pop" },
+            "color": "white",
+            "release": 1430
+        },
+        {
+            "cue": "A6 - all hit",
+            "midi": { "Controller": { "channel": 0, "cc": 15 }},
+            "light": { "Effect": "Pop" },
+            "color": "white",
+            "release": 250
+        },
+        {
+            "cue": "A7 - basses white",
+            "midi": { "Controller": { "channel": 0, "cc": 16 }},
+            "light": { "Effect": "Pop" },
+            "color": "white",
+            "release": 250,
+            "targets": [ "bass_1", "bass_2", "bass_3", "bass_4" ]
+        },
+        {
+            "cue": "A8 - snare and tenor hit",
+            "midi": { "Controller": { "channel": 0, "cc": 17 }},
+            "light": { "Effect": "Pop" },
+            "color": "white",
+            "release": 250,
+            "targets": [ "snare_1", "snare_2", "tenor" ]
+        },
+        {
+            "cue": "A9 - all hit",
+            "midi": { "Controller": { "channel": 0, "cc": 20 }},
+            "light": { "Effect": "Pop" },
+            "color": "white",
+            "release": 250
+        },
+        {
+            "cue": "A10 - all fade",
+            "midi": { "Controller": { "channel": 0, "cc": 21 }},
+            "light": { "Effect": "Pop" },
+            "color": "white",
+            "release": 1430
+        },
+
+        //
+        // SECOND MOVEMENT (BALLAD)
+        //
+
+        {
+            "cue": "B1 - marimba solo",
+            "midi": { "Controller": { "channel": 0, "cc": 40 }},
+            "light": { "Effect": "Pop" },
+            "color": "aqua",
+            "release": 250,
+            "targets": [ "marimba_2_1", "marimba_2_2", "marimba_2_3" ]
+        },
+        /* TODO - lanterns
+        {
+            "cue": "B2 - lanterns on",
+            "midi": { "Controller": { "channel": 0, "cc": 41 }},
+            "light": { "Effect": "Pop" },
+            "color": "white",
+            "release": 250
+        },
+        */
+        {
+            "cue": "B3 - swells front",
+            "midi": { "Controller": { "channel": 0, "cc": 42 }},
+            "light": { "Clip": "swells-front" },
+            "color": "darkblue",
+            "tempo": 50
+        },
+        {
+            "cue": "B4 - swells front",
+            "midi": { "Controller": { "channel": 0, "cc": 43 }},
+            "light": { "Clip": "swells-back" },
+            "color": "darkblue",
+            "tempo": 50
+        },
+        {
+            "cue": "B9 - stars",
+            "midi": { "Controller": { "channel": 0, "cc": 50 }},
+            "light": { "Effect": { "Twinkle": { "twinkle_brightness": 64, "twinkle_factor": 0.25 }}},
+            "color": "white",
+            "attack": 500,
+            "release": 500,
+            "tempo": 60,
+            "targets": [ "stars" ]
+        },
+        {
+            "cue": "B6 - shimmer all",
+            "midi": { "Controller": { "channel": 0, "cc": 45 }},
+            "light": { "Effect": { "Twinkle": { "twinkle_brightness": 255, "twinkle_factor": 0.5 }} },
+            "color": "blackblue",
+            "release": 1000,
+            "tempo": 60,
+            "targets": [ "pit_front", "pit_back", "battery" ]
+        },
+
+        // 
+        // THIRD MOVEMENT (CLOSER)
+        //
+
+        {
+            "cue": "C1 - lighthouse",
+            "midi": { "Controller": { "channel": 0, "cc": 60 }},
+            "light": { "Effect": { "DigitalPin": { "pin": 5 }} },
+            "color": "white",
+            "targets": [ "lighthouse" ]
+        },
+
+        {
+            "cue": "C2 - snare 1",
+            "midi": { "Controller": { "channel": 0, "cc": 61 }},
+            "light": { "Effect": "Pop" },
+            "color": "red",
+            "release": 250,
+            "targets": [ "snare_1" ]
+        },
+        {
+            "cue": "C3 - snare 1 and  tenor",
+            "midi": { "Controller": { "channel": 0, "cc": 62 }},
+            "light": { "Effect": "Pop" },
+            "color": "red",
+            "release": 250,
+            "targets": [ "snare_1", "tenor" ]
+        },
+        {
+            "cue": "C4 - slow chaos",
+            "midi": { "Controller": { "channel": 0, "cc" :63 }},
+            "light": { "Effect": { "Firecrackers": { "delay_quantization": 128, "delay_multiplier": 10 } } },
+            "color": "red",
+            "release": 500
+        },
+        {
+            "cue": "C5 - faster chaos",
+            "midi": { "Controller": { "channel": 0, "cc": 65 }},
+            "light": { "Effect": { "Firecrackers": { "delay_quantization": 128, "delay_multiplier": 5 } } },
+            "color": "red",
+            "release": 250
+        },
+        {
+            "cue": "C6 - all hit 10 count fade",
+            "midi": { "Controller": { "channel": 0, "cc":66 }},
+            "light": { "Effect": "Pop" },
+            "color": "white",
+            "release": 3300
+        },
+        {
+            "cue": "C7 - basses solo",
+            "midi": { "Controller": { "channel": 0, "cc":67 }},
+            "light": { "Effect": "Pop" },
+            "color": "white",
+            "release": 250,
+            "targets": [ "bass_1", "bass_2", "bass_3", "bass_4" ]
+        },
+        {
+            "cue": "C8 - all hit 6 count fade",
+            "midi": { "Controller": { "channel": 0, "cc":68 }},
+            "light": { "Effect": "Pop" },
+            "color": "white",
+            "release": 1900
+        },
+        {
+            "cue": "C9 - tenor solo",
+            "midi": { "Controller": { "channel": 0, "cc":70 }},
+            "light": { "Effect": "Pop" },
+            "color": "white",
+            "release": 250,
+            "targets": [ "tenor" ]
+        },
+        {
+            "cue": "C10 - lighthouse",
+            "midi": { "Controller": { "channel": 0, "cc": 71 }},
+            "light": { "Effect": { "DigitalPin": { "pin": 5 }} },
+            "color": "white",
+            "targets": [ "lighthouse" ]
+        },
+        {
+            "cue": "C11 - lights all chase",
+            "midi": { "Controller": { "channel": 0, "cc":72 }},
+            "light": { "Effect": { "Chase": { "chase_length": 15, "reverse": false }} },
+            "color": "white",
+            "release": 250
+        },
+        {
+            "cue": "C12 - all long fade",
+            "midi": { "Controller": { "channel": 0, "cc":73 }},
+            "light": { "Effect": "Pop" },
+            "color": "white",
+            "release": 1780
+        }
+    ],
+
+    "clips": {
+        "opener-ripple-a4": [
+            { "MappingOn": { "cue": "tenor", "light": { "Effect": "Pop" }, "color": "white", "release": 250, "targets": [ "tenor" ] }},
+            { "WaitBeats": 0.5 },
+            { "MappingOn": { "cue": "snare1", "light": { "Effect": "Pop" }, "color": "white", "release": 250, "targets": [ "snare_1" ] }},
+            { "WaitBeats": 0.5 },
+            { "MappingOn": { "cue": "snare2", "light": { "Effect": "Pop" }, "color": "white", "release": 250, "targets": [ "snare_2" ] }},
+            { "WaitBeats": 0.5 },
+            { "MappingOn": { "cue": "bass4", "light": { "Effect": "Pop" }, "color": "white", "release": 250, "targets": [ "bass_4" ] }},
+            { "WaitBeats": 0.5 },
+            { "MappingOn": { "cue": "bass2", "light": { "Effect": "Pop" }, "color": "white", "release": 250, "targets": [ "bass_2" ] }},
+            { "WaitBeats": 0.5 },
+            { "MappingOn": { "cue": "bass1", "light": { "Effect": "Pop" }, "color": "white", "release": 250, "targets": [ "bass_1" ] }},
+            { "WaitBeats": 0.5 },
+            { "MappingOn": { "cue": "lighthouse", "light": { "Effect": { "DigitalPin": {"pin": 5}}}, "color": "white", "targets": [ "lighthouse" ] }},
+            "End"
+        ],
+        "swells-front": [
+            { "MappingOn": { "cue": "swells",  "light": { "Effect": { "Wave": { "alternate_hue": 160, "alternate_brightness": 255, "colorspace_range": 64, "colorspace_phase": 0 }}},
+                "color": "darkgreen", "attack": 250, "release": 250, "targets": [ "bells" ] }},
+                { "MappingOn": { "cue": "swells",  "light": { "Effect": { "Wave": { "alternate_hue": 160, "alternate_brightness": 255, "colorspace_range": 64, "colorspace_phase": 64 }}},
+                "color": "darkgreen", "attack": 250, "release": 250, "targets": [ "vibe_1_1" ] }},
+                { "MappingOn": { "cue": "swells",  "light": { "Effect": { "Wave": { "alternate_hue": 160, "alternate_brightness": 255, "colorspace_range": 64, "colorspace_phase": 128 }}},
+                "color": "darkgreen", "attack": 250, "release": 250, "targets": [ "vibe_1_2" ] }},
+                { "MappingOn": { "cue": "swells",  "light": { "Effect": { "Wave": { "alternate_hue": 160, "alternate_brightness": 255, "colorspace_range": 64, "colorspace_phase": 196 }}},
+                "color": "darkgreen", "attack": 250, "release": 250, "targets": [ "vibe_2_1" ] }},
+                { "MappingOn": { "cue": "swells",  "light": { "Effect": { "Wave": { "alternate_hue": 160, "alternate_brightness": 255, "colorspace_range": 64, "colorspace_phase": 0 }}},
+                "color": "darkgreen", "attack": 250, "release": 250, "targets": [ "vibe_2_2" ] }},
+                { "MappingOn": { "cue": "swells",  "light": { "Effect": { "Wave": { "alternate_hue": 160, "alternate_brightness": 255, "colorspace_range": 64, "colorspace_phase": 64 }}},
+                "color": "darkgreen", "attack": 250, "release": 250, "targets": [ "marimba_1_1" ] }},
+                { "MappingOn": { "cue": "swells",  "light": { "Effect": { "Wave": { "alternate_hue": 160, "alternate_brightness": 255, "colorspace_range": 64, "colorspace_phase": 128 }}},
+                "color": "darkgreen", "attack": 250, "release": 250, "targets": [ "marimba_1_2" ] }},
+                { "MappingOn": { "cue": "swells",  "light": { "Effect": { "Wave": { "alternate_hue": 160, "alternate_brightness": 255, "colorspace_range": 64, "colorspace_phase": 196 }}},
+                "color": "darkgreen", "attack": 250, "release": 250, "targets": [ "marimba_1_3" ] }},
+                { "MappingOn": { "cue": "swells",  "light": { "Effect": { "Wave": { "alternate_hue": 160, "alternate_brightness": 255, "colorspace_range": 64, "colorspace_phase": 0 }}},
+                "color": "darkgreen", "attack": 250, "release": 250, "targets": [ "marimba_2_1" ] }},
+                { "MappingOn": { "cue": "swells",  "light": { "Effect": { "Wave": { "alternate_hue": 160, "alternate_brightness": 255, "colorspace_range": 64, "colorspace_phase": 64 }}},
+                "color": "darkgreen", "attack": 250, "release": 250, "targets": [ "marimba_2_2" ] }},
+                { "MappingOn": { "cue": "swells",  "light": { "Effect": { "Wave": { "alternate_hue": 160, "alternate_brightness": 255, "colorspace_range": 64, "colorspace_phase": 128 }}},
+                "color": "darkgreen", "attack": 250, "release": 250, "targets": [ "marimba_2_3" ] }},
+                { "MappingOn": { "cue": "swells",  "light": { "Effect": { "Wave": { "alternate_hue": 160, "alternate_brightness": 255, "colorspace_range": 64, "colorspace_phase": 196 }}},
+                "color": "darkgreen", "attack": 250, "release": 250, "targets": [ "marimba_3_1" ] }},
+                { "MappingOn": { "cue": "swells",  "light": { "Effect": { "Wave": { "alternate_hue": 160, "alternate_brightness": 255, "colorspace_range": 64, "colorspace_phase": 0 }}},
+                "color": "darkgreen", "attack": 250, "release": 250, "targets": [ "marimba_3_2" ] }},
+                { "MappingOn": { "cue": "swells",  "light": { "Effect": { "Wave": { "alternate_hue": 160, "alternate_brightness": 255, "colorspace_range": 64, "colorspace_phase": 64 }}},
+                "color": "darkgreen", "attack": 250, "release": 250, "targets": [ "marimba_3_3" ] }},
+                "End"
+        ],
+        "swells-back": [
+            { "MappingOn": { "cue": "swells",  "light": { "Effect": { "Wave": { "alternate_hue": 160, "alternate_brightness": 255, "colorspace_range": 64, "colorspace_phase": 0 }}},
+                "color": "darkgreen", "attack": 250, "release": 250, "targets": [ "vibe_3_1" ] }},
+                { "MappingOn": { "cue": "swells",  "light": { "Effect": { "Wave": { "alternate_hue": 160, "alternate_brightness": 255, "colorspace_range": 64, "colorspace_phase": 64 }}},
+                "color": "darkgreen", "attack": 250, "release": 250, "targets": [ "vibe_3_2" ] }},
+                { "MappingOn": { "cue": "swells",  "light": { "Effect": { "Wave": { "alternate_hue": 160, "alternate_brightness": 255, "colorspace_range": 64, "colorspace_phase": 128 }}},
+                "color": "darkgreen", "attack": 250, "release": 250, "targets": [ "vibe_4_1" ] }},
+                { "MappingOn": { "cue": "swells",  "light": { "Effect": { "Wave": { "alternate_hue": 160, "alternate_brightness": 255, "colorspace_range": 64, "colorspace_phase": 196 }}},
+                "color": "darkgreen", "attack": 250, "release": 250, "targets": [ "vibe_4_2" ] }},
+                { "MappingOn": { "cue": "swells",  "light": { "Effect": { "Wave": { "alternate_hue": 160, "alternate_brightness": 255, "colorspace_range": 64, "colorspace_phase": 0 }}},
+                "color": "darkgreen", "attack": 250, "release": 250, "targets": [ "xylo_1" ] }},
+                { "MappingOn": { "cue": "swells",  "light": { "Effect": { "Wave": { "alternate_hue": 160, "alternate_brightness": 255, "colorspace_range": 64, "colorspace_phase": 64 }}},
+                "color": "darkgreen", "attack": 250, "release": 250, "targets": [ "xylo_2" ] }},
+                { "MappingOn": { "cue": "swells",  "light": { "Effect": { "Wave": { "alternate_hue": 160, "alternate_brightness": 255, "colorspace_range": 64, "colorspace_phase": 128 }}},
+                "color": "darkgreen", "attack": 250, "release": 250, "targets": [ "marimba_4_1" ] }},
+                { "MappingOn": { "cue": "swells",  "light": { "Effect": { "Wave": { "alternate_hue": 160, "alternate_brightness": 255, "colorspace_range": 64, "colorspace_phase": 196 }}},
+                "color": "darkgreen", "attack": 250, "release": 250, "targets": [ "marimba_4_2" ] }},
+                { "MappingOn": { "cue": "swells",  "light": { "Effect": { "Wave": { "alternate_hue": 160, "alternate_brightness": 255, "colorspace_range": 64, "colorspace_phase": 0 }}},
+                "color": "darkgreen", "attack": 250, "release": 250, "targets": [ "marimba_4_3" ] }},
+                { "MappingOn": { "cue": "swells",  "light": { "Effect": { "Wave": { "alternate_hue": 160, "alternate_brightness": 255, "colorspace_range": 64, "colorspace_phase": 64 }}},
+                "color": "darkgreen", "attack": 250, "release": 250, "targets": [ "timp_1_1" ] }},
+                { "MappingOn": { "cue": "swells",  "light": { "Effect": { "Wave": { "alternate_hue": 160, "alternate_brightness": 255, "colorspace_range": 64, "colorspace_phase": 128 }}},
+                "color": "darkgreen", "attack": 250, "release": 250, "targets": [ "timp_2_1" ] }},
+                { "MappingOn": { "cue": "swells",  "light": { "Effect": { "Wave": { "alternate_hue": 160, "alternate_brightness": 255, "colorspace_range": 64, "colorspace_phase": 196 }}},
+                "color": "darkgreen", "attack": 250, "release": 250, "targets": [ "timp_2_2" ] }},
+                { "MappingOn": { "cue": "swells",  "light": { "Effect": { "Wave": { "alternate_hue": 160, "alternate_brightness": 255, "colorspace_range": 64, "colorspace_phase": 0 }}},
+                "color": "darkgreen", "attack": 250, "release": 250, "targets": [ "timp_3_1" ] }},
+                { "MappingOn": { "cue": "swells",  "light": { "Effect": { "Wave": { "alternate_hue": 160, "alternate_brightness": 255, "colorspace_range": 64, "colorspace_phase": 64 }}},
+                "color": "darkgreen", "attack": 250, "release": 250, "targets": [ "timp_3_2" ] }},
+                { "MappingOn": { "cue": "swells",  "light": { "Effect": { "Wave": { "alternate_hue": 160, "alternate_brightness": 255, "colorspace_range": 64, "colorspace_phase": 128 }}},
+                "color": "darkgreen", "attack": 250, "release": 250, "targets": [ "timp_4_1" ] }},
+                { "MappingOn": { "cue": "swells",  "light": { "Effect": { "Wave": { "alternate_hue": 160, "alternate_brightness": 255, "colorspace_range": 64, "colorspace_phase": 196 }}},
+                "color": "darkgreen", "attack": 250, "release": 250, "targets": [ "timp_4_2" ] }},
+                { "MappingOn": { "cue": "swells",  "light": { "Effect": { "Wave": { "alternate_hue": 160, "alternate_brightness": 255, "colorspace_range": 64, "colorspace_phase": 0 }}},
+                "color": "darkgreen", "attack": 250, "release": 250, "targets": [ "synth_1" ] }},
+                { "MappingOn": { "cue": "swells",  "light": { "Effect": { "Wave": { "alternate_hue": 160, "alternate_brightness": 255, "colorspace_range": 64, "colorspace_phase": 64 }}},
+                "color": "darkgreen", "attack": 250, "release": 250, "targets": [ "synth_2" ] }},
+                "End"
+        ]
+    }
 }

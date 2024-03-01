@@ -2,7 +2,7 @@ use log::{debug,info};
 use std::cmp::min;
 use std::rc::Rc;
 use std::time::{Duration,Instant};
-use std::collections::HashMap;
+use std::collections::{HashMap};
 use std::cell::RefCell;
 use midly::live::LiveEvent;
 use midly::MidiMessage;
@@ -20,6 +20,11 @@ const SUSTAIN_CONTROLLER: u8 = 64;
 const TEST_CONTROLLER : u8 = 102;
 
 const ALL_RECIPIENTS: Vec<u8> = vec![];
+
+const GLOBAL_RESET_PACKET: Packet = Packet {
+    recipients: &ALL_RECIPIENTS,
+    payload: PacketPayload::Control(Command::Reset)
+};
 
 const GLOBAL_OFF_PACKET: Packet = Packet {
     recipients: &ALL_RECIPIENTS,
@@ -54,10 +59,10 @@ pub struct ShowState<'a,'b> {
     target_lookup: HashMap<String,u8>,
 
     /// midi channel/note to light mapping key
-    note_mappings: HashMap<(u4,u7), usize>,
+    note_mappings: HashMap<(u4,u7), Vec<usize>>,
 
     /// midi channel/cc to light mapping key
-    controller_mappings: HashMap<(u4,u7), usize>,
+    controller_mappings: HashMap<(u4,u7), Vec<usize>>,
     
     /// a map from a named clip to the play state of that clip
     /// note that the clip engine uses interior mutability so we can treat it as immutable
@@ -195,8 +200,8 @@ impl<'a,'b> ShowState<'a,'b> {
         let mut target_lookup: HashMap<String,u8> = HashMap::new();
         let mut group_members: HashMap<u8,Vec<u8>> = HashMap::new();
         let mut group_id = GROUP_ID_RANGE.start;
-        let mut note_mappings: HashMap<(u4,u7), usize> = HashMap::new();
-        let mut controller_mappings: HashMap<(u4,u7), usize> = HashMap::new();
+        let mut note_mappings: HashMap<(u4,u7), Vec<usize>> = HashMap::new();
+        let mut controller_mappings: HashMap<(u4,u7), Vec<usize>> = HashMap::new();
 
         // preprocess receivers
         for r in show.receivers.iter() {
@@ -220,12 +225,12 @@ impl<'a,'b> ShowState<'a,'b> {
         for m in show.mappings.iter() {
             match &m.midi {
                 Some(MidiMappingType::Note { channel, note }) => {
-                    note_mappings.insert(((*channel).into(), ResolvedNote::from_str(&note).unwrap().midi.into()), 
-                        m.get_id());
+                    note_mappings.entry(((*channel).into(), ResolvedNote::from_str(&note).unwrap().midi.into()))
+                    .or_insert_with(Vec::new).push(m.get_id());
                 },
                 Some(MidiMappingType::Controller { channel, cc }) => {
-                    controller_mappings.insert(((*channel).into(), (*cc).into()), 
-                        m.get_id());
+                    controller_mappings.entry(((*channel).into(), (*cc).into()))
+                    .or_insert_with(Vec::new).push(m.get_id());
                 },
                 None => {
                     return Err(anyhow!("Non-clip mapping missing a midi mapping element: {:?}", m));
@@ -332,6 +337,8 @@ impl<'a,'b> ShowState<'a,'b> {
     /// Send control packets to all the receivers telling them
     /// what group they're in and how many leds they have
     pub fn configure_receivers(self: &Self) -> Result<(), RadioError> {
+        // reset everybody because receiving a 
+        self.radio.send(&GLOBAL_RESET_PACKET)?;
         for receiver in self.show.receivers.iter() {
 
             if let Some(group_name) = &receiver.group_name {
@@ -422,10 +429,15 @@ impl<'a,'b> ShowState<'a,'b> {
             return Ok(())
         }
         match self.controller_mappings.get(&(channel, controller)) {
-            Some(id) => match u8::from(value) {
-                127 => self.activate(*id, None, state),
-                0 => self.deactivate_from_midi(*id, state),
-                _ => Ok(())
+            Some(ids) => {
+                for id in ids {
+                    match u8::from(value) {
+                        127 => self.activate(*id, None, state)?,
+                        0 => self.deactivate_from_midi(*id, state)?,
+                        _ => ()
+                    }
+                }
+                Ok(())
             },
             _ => Ok(())
         }
@@ -433,14 +445,24 @@ impl<'a,'b> ShowState<'a,'b> {
 
     fn process_note_on(self: &Self, channel: u4, key: u7, _velocity: u7, state: &mut MutableShowState) -> anyhow::Result<()> {
         match self.note_mappings.get(&(channel, key)) {
-            Some(id) => self.activate(*id, None, state),
+            Some(ids) => {
+                for id in ids {
+                    self.activate(*id, None, state)?;
+                }
+                Ok(())
+            },
             _ => Ok(())
         }
     }
 
     fn process_note_off(self: &Self, channel: u4, key: u7, _velocity: u7, state: &mut MutableShowState) -> anyhow::Result<()> {
         match self.note_mappings.get(&(channel, key)) {
-            Some(id) => self.deactivate_from_midi(*id, state),
+            Some(ids) => {
+                for id in ids {
+                    self.deactivate_from_midi(*id, state)?;
+                }
+                Ok(())
+            },
             _ => Ok(())
         }
     }
@@ -455,7 +477,8 @@ impl<'a,'b> ShowState<'a,'b> {
 
     fn activate_effect(self: &Self, mapping_id: usize, effect: &Effect, overrides: Option<EffectOverrides>, state: &mut MutableShowState) -> anyhow::Result<()> {
         let mapping_meta = state.light_mappings.get(&mapping_id).unwrap();
-        info!("activate effect: {:#?}, color: {}, targets: {:#?}", effect, mapping_meta.source.color, mapping_meta.source.targets);
+        info!("activate cue: {}", mapping_meta.source.cue);
+
         let mut show_packet = ShowPacket {
             effect: effect.to_effect_id(),
             color: overrides.as_ref().and_then(|o| o.color).unwrap_or(mapping_meta.color),
@@ -494,7 +517,7 @@ impl<'a,'b> ShowState<'a,'b> {
             self.config.lights_out_window().contains(&(now - state.last_effect)) && 
             now - state.last_lights_out >= self.config.lights_out_delay() {
 
-            info!("lights out");
+            debug!("lights out");
             self.radio.send(&GLOBAL_OFF_PACKET)?;
             state.last_lights_out = now;
         }
@@ -529,15 +552,20 @@ impl<'a,'b> ShowState<'a,'b> {
         }
     }
 
-    fn deactivate_effect(self: &Self, mapping_meta: &LightMappingMeta, effect: &Effect) -> anyhow::Result<()> {
+    fn deactivate_effect(self: &Self, mapping_meta: &LightMappingMeta, _effect: &Effect) -> anyhow::Result<()> {
         if !mapping_meta.source.one_shot.unwrap_or(false) {
-            info!("deactivate effect: {:#?}, color: {}, targets: {:#?}", effect, mapping_meta.source.color, mapping_meta.source.targets);
+            info!("deactivate cue: {}",  mapping_meta.source.cue);
+
+            // we can take the simple path if all receivers activated by this effect are still
+            // activated by this effect
             let simple_off_path = mapping_meta.receivers.iter().all(
                 |r| r.borrow().activated_by(&mapping_meta.source));
 
             let dynamic_recipients = if simple_off_path {
                 None
             } else {
+                // otherwise we have to calculate receivers to deactivate individually by finding ones
+                // this effect activated
                 Some(mapping_meta.receivers.iter()
                     .filter(|r| r.borrow().activated_by(&mapping_meta.source))
                     .map(|r| r.borrow().id)
@@ -549,10 +577,17 @@ impl<'a,'b> ShowState<'a,'b> {
                 recipients: dynamic_recipients.as_ref().unwrap_or(&mapping_meta.targets)
             };
             debug!("deactivate recipients list computed to be: {:#?}", packet.recipients);
-            self.radio.send(&packet)?;
-            // update each receiver state as deactivated
-            mapping_meta.receivers.iter().for_each(|r| 
-                { r.borrow_mut().deactivate(&mapping_meta.source); });
+
+            // want to skip sending anything if we had to dynamically compute the off list and it came up empty
+            // (all receivers were captured by another effect, so there's nothing to do)
+            if dynamic_recipients.is_none() || dynamic_recipients.as_ref().is_some_and(|r| !r.is_empty()) {
+                self.radio.send(&packet)?;
+                // update each receiver state as deactivated
+                for receiver in &mapping_meta.receivers {
+                    receiver.borrow_mut().deactivate(&mapping_meta.source);
+                }
+                ()
+            }
         }
         Ok(())
     }

@@ -50,7 +50,7 @@ pub enum Effect {
     Sparkle { stride: u8, tempo_division: u8 },
     /// color of the wave goes from the hue (in the color) to alternate_hue
     /// colorspace_fraction is a the fraction of the unit circle (/256) mapped to the array
-    Wave { alternate_hue: u8, colorspace_fraction: u8 },
+    Wave { alternate_hue: u8, alternate_brightness: u8, colorspace_phase: u8, colorspace_range: u8 },
     /// flash_decay is how long each triggered flash should take to decay
     /// threshold is how sensitive to be (high values meaning less sensitive to trigger)
     PiezoTrigger { flash_decay: u8, threshold: u8 },
@@ -60,7 +60,9 @@ pub enum Effect {
     Grass { base_height: u8, blade_top: u8 },
     CircularChase { chase_length: u8, reverse: bool },
     BatteryTest,
-    Rainbow { secondary_hue: u8 }
+    Rainbow { secondary_hue: u8 },
+    Twinkle { twinkle_brightness: u8, twinkle_factor: f32 },
+    DigitalPin { pin: u8 },
 }
 
 
@@ -75,6 +77,8 @@ pub struct ReceiverConfiguration {
     pub group_name: Option<String>,
     /// the number of LEDs in the string
     pub led_count: u16,
+    
+    pub comment: Option<String>
 }
 
 /// the source of a midi mapping whether it be a note or CC (continuous controller)
@@ -96,6 +100,7 @@ pub struct Color { pub h: u8, pub s: u8, pub v: u8 }
 
 #[derive(Debug,Deserialize,Clone)]
 pub struct LightMapping {
+    pub cue: String,
     pub midi: Option<MidiMappingType>,
     pub light: LightMappingType,
     pub color: String,

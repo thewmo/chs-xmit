@@ -10,6 +10,7 @@ use std::thread;
 use signal_hook::consts::{SIGINT,SIGTERM,SIGHUP};
 use signal_hook::iterator::SignalsInfo;
 use signal_hook::iterator::exfiltrator::WithOrigin;
+use json_comments::StripComments;
 
 use crate::radio::Radio;
 use crate::director::{Director,DirectorMessage};
@@ -57,7 +58,7 @@ struct Cli {
 
 fn load_config(cli: &Cli) -> Result<config::ConfigFile, io::Error> {
     let file = File::open(&cli.config)?;
-    Ok(serde_json::from_reader(&file)?)
+    Ok(serde_json::from_reader(StripComments::new(file))?)
 }
 
 fn main() -> anyhow::Result<()> {
