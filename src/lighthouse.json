@@ -100,7 +100,7 @@
 
         {
             "name": "vibe_3_1",
-            "id": 91,
+            "id": 80,
             "group_name": "pit_back",
             "led_count": 30
         },
@@ -166,19 +166,19 @@
         },
         {
             "name": "synth_2",
-            "id": 121,
+            "id": 86,
             "group_name": "pit_back",
             "led_count": 30
         },
         {
             "name": "synth_3",
-            "id": 88,
+            "id": 121,
             "group_name": "pit_back",
             "led_count": 30
         },
         {
             "name": "synth_4",
-            "id": 92,
+            "id": 162,
             "group_name": "pit_back",
             "led_count": 30
         },
@@ -232,7 +232,8 @@
         {
             "name": "lighthouse",
             "id": 87,
-            "led_count": 1
+            "led_count": 1,
+	        "group_name": "lighthouse_group" // unique name here to make sure lighthouse doesn't join some other group
         },
 
         //
@@ -259,7 +260,7 @@
         },
         {
             "name": "bass_1",
-            "id": 95,
+            "id": 111,
             "group_name": "battery",
             "led_count": 71
         },
@@ -393,7 +394,7 @@
             "tempo": 50
         },
         {
-            "cue": "B4 - swells front",
+            "cue": "B4 - swells back",
             "midi": { "Controller": { "channel": 0, "cc": 43 }},
             "light": { "Clip": "swells-back" },
             "color": "darkblue",
@@ -430,7 +431,6 @@
             "color": "white",
             "targets": [ "lighthouse" ]
         },
-
         {
             "cue": "C2 - snare 1",
             "midi": { "Controller": { "channel": 0, "cc": 61 }},
@@ -452,28 +452,32 @@
             "midi": { "Controller": { "channel": 0, "cc" :63 }},
             "light": { "Effect": { "Firecrackers": { "delay_quantization": 128, "delay_multiplier": 10 } } },
             "color": "red",
-            "release": 500
+            "release": 500,
+    	    "targets": [ "pit_front", "pit_back", "battery" ]
         },
         {
             "cue": "C5 - faster chaos",
             "midi": { "Controller": { "channel": 0, "cc": 65 }},
             "light": { "Effect": { "Firecrackers": { "delay_quantization": 128, "delay_multiplier": 5 } } },
             "color": "red",
-            "release": 250
+            "release": 250,
+	        "targets": [ "pit_front", "pit_back", "battery" ]
         },
         {
             "cue": "C6 - all hit 10 count fade",
             "midi": { "Controller": { "channel": 0, "cc":66 }},
             "light": { "Effect": "Pop" },
             "color": "white",
-            "release": 3300
+            "release": 3300,
+            "targets": [ "pit_front", "pit_back", "battery", "stars", "screens" ]
         },
         {
             "cue": "C14 - ripple to lighthouse flash",
             "midi": { "Controller": { "channel": 0, "cc": 75 }},
-            "light": { "Clip": "ripple-c7" },
+            "light": { "Clip": "ripple-c14" },
             "color": "white",
-            "tempo": 180
+            "tempo": 180,
+    	    "one_shot": true
         },
         {
             "cue": "C7 - basses solo",
@@ -488,7 +492,8 @@
             "midi": { "Controller": { "channel": 0, "cc":68 }},
             "light": { "Effect": "Pop" },
             "color": "white",
-            "release": 1900
+            "release": 1900,
+            "targets": [ "pit_front", "pit_back", "battery", "stars", "screens" ]
         },
         {
             "cue": "C9 - tenor solo",
@@ -510,14 +515,24 @@
             "midi": { "Controller": { "channel": 0, "cc":72 }},
             "light": { "Effect": { "Chase": { "chase_length": 15, "reverse": false }} },
             "color": "white",
-            "release": 250
+            "release": 250,
+    	    "targets": [ "pit_front", "pit_back", "battery" ]
         },
         {
             "cue": "C12 - all long fade",
             "midi": { "Controller": { "channel": 0, "cc":73 }},
             "light": { "Effect": "Pop" },
             "color": "white",
-            "release": 1780
+            "release": 1780,
+            "targets": [ "pit_front", "pit_back", "battery", "stars", "screens" ]
+        },
+        {
+            "cue": "C12 - lighthouse",
+            "midi": { "Controller": { "channel": 0, "cc":73 }},
+            "light": { "Effect": { "DigitalPin": { "pin": 5 }} },
+            "color": "white",
+            "release": 1780,
+            "targets": [ "lighthouse" ]
         }
     ],
 
@@ -597,7 +612,7 @@
             { "MappingOn": { "cue": "swells",  "light": { "Effect": { "Wave": { "alternate_hue": 160, "alternate_brightness": 255, "colorspace_range": 64, "colorspace_phase": 128 }}},
             "color": "darkgreen", "attack": 250, "release": 250, "targets": [ "synth_5" ] }}           
         ],
-        "ripple-c7": [
+        "ripple-c14": [
             // beat 1
             { "MappingOn": { "cue": "ripple", "light": { "Effect": "Pop" }, "color": "white", "targets": [ "vibe_1_1" ]}},
             { "WaitBeats": 0.25 },
@@ -671,8 +686,10 @@
             { "MappingOn": { "cue": "ripple", "light": { "Effect": "Pop" }, "color": "white", "targets": [ "synth_5" ]}},
             { "WaitBeats": 0.25 },
 
-            // beat 8
-            { "MappingOn": { "cue": "ripple", "light": { "Effect": { "DigitalPin": { "pin": 5 }} }, "color": "white", "targets": [ "lighthouse" ]}}
+            // beat 8, lighthouse one beat then all off
+            { "MappingOn": { "cue": "ripple", "light": { "Effect": { "DigitalPin": { "pin": 5 }} }, "color": "white", "targets": [ "lighthouse" ]}},
+            { "WaitBeats": 1.0 },
+            "Stop"
         ]
     }
 }

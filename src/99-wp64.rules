@@ -1,0 +1,1 @@
+ACTION=="add", SUBSYSTEM=="sound", ATTRS{idVendor}=="1c75", ATTRS{idProduct}=="0204", TAG+="systemd", ENV{SYSTEMD_WANTS}+="chs-lights.service"

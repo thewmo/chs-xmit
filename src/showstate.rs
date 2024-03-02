@@ -546,47 +546,48 @@ impl<'a,'b> ShowState<'a,'b> {
 
     pub fn deactivate(self: &Self, mapping_id: usize, state: &mut MutableShowState) -> anyhow::Result<()>{
         let mapping_meta = state.light_mappings.get(&mapping_id).unwrap();
-        match &mapping_meta.source.light {
-            LightMappingType::Effect(e) => self.deactivate_effect(mapping_meta, e),
-            LightMappingType::Clip(c) => self.clip_engine.stop_clip(&c, &self, state)
+        if !mapping_meta.source.one_shot.unwrap_or(false) {
+            match &mapping_meta.source.light {
+                LightMappingType::Effect(e) => self.deactivate_effect(mapping_meta, e),
+                LightMappingType::Clip(c) => self.clip_engine.stop_clip(&c, &self, state)
+            }
+        } else {
+            Ok(())
         }
     }
 
     fn deactivate_effect(self: &Self, mapping_meta: &LightMappingMeta, _effect: &Effect) -> anyhow::Result<()> {
-        if !mapping_meta.source.one_shot.unwrap_or(false) {
-            info!("deactivate cue: {}",  mapping_meta.source.cue);
+        info!("deactivate cue: {}",  mapping_meta.source.cue);
 
-            // we can take the simple path if all receivers activated by this effect are still
-            // activated by this effect
-            let simple_off_path = mapping_meta.receivers.iter().all(
-                |r| r.borrow().activated_by(&mapping_meta.source));
+        // we can take the simple path if all receivers activated by this effect are still
+        // activated by this effect
+        let simple_off_path = mapping_meta.receivers.iter().all(
+            |r| r.borrow().activated_by(&mapping_meta.source));
 
-            let dynamic_recipients = if simple_off_path {
-                None
-            } else {
-                // otherwise we have to calculate receivers to deactivate individually by finding ones
-                // this effect activated
-                Some(mapping_meta.receivers.iter()
-                    .filter(|r| r.borrow().activated_by(&mapping_meta.source))
-                    .map(|r| r.borrow().id)
-                    .collect())
-            };
+        let dynamic_recipients = if simple_off_path {
+            None
+        } else {
+            // otherwise we have to calculate receivers to deactivate individually by finding ones
+            // this effect activated
+            Some(mapping_meta.receivers.iter()
+                .filter(|r| r.borrow().activated_by(&mapping_meta.source))
+                .map(|r| r.borrow().id)
+                .collect())
+        };
 
-            let packet = Packet {
-                payload: PacketPayload::Show(ShowPacket::OFF_PACKET),
-                recipients: dynamic_recipients.as_ref().unwrap_or(&mapping_meta.targets)
-            };
-            debug!("deactivate recipients list computed to be: {:#?}", packet.recipients);
+        let packet = Packet {
+            payload: PacketPayload::Show(ShowPacket::OFF_PACKET),
+            recipients: dynamic_recipients.as_ref().unwrap_or(&mapping_meta.targets)
+        };
+        debug!("deactivate recipients list computed to be: {:#?}", packet.recipients);
 
-            // want to skip sending anything if we had to dynamically compute the off list and it came up empty
-            // (all receivers were captured by another effect, so there's nothing to do)
-            if dynamic_recipients.is_none() || dynamic_recipients.as_ref().is_some_and(|r| !r.is_empty()) {
-                self.radio.send(&packet)?;
-                // update each receiver state as deactivated
-                for receiver in &mapping_meta.receivers {
-                    receiver.borrow_mut().deactivate(&mapping_meta.source);
-                }
-                ()
+        // want to skip sending anything if we had to dynamically compute the off list and it came up empty
+        // (all receivers were captured by another effect, so there's nothing to do)
+        if dynamic_recipients.is_none() || dynamic_recipients.as_ref().is_some_and(|r| !r.is_empty()) {
+            self.radio.send(&packet)?;
+            // update each receiver state as deactivated
+            for receiver in &mapping_meta.receivers {
+                receiver.borrow_mut().deactivate(&mapping_meta.source);
             }
         }
         Ok(())

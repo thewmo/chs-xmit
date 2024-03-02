@@ -1,7 +1,7 @@
 [Unit]
 Description=MIDI lights for CHS
 StartLimitIntervalSec=0
-BindsTo=dev-snd-by\x2did-usb\x2dWORLDE_W\x2dP64_001011020202\x2d00.device
+StopWhenUnneeded=true
 
 [Service]
 Type=simple
@@ -12,7 +12,5 @@ Restart=always
 RestartSec=5
 User=chs
 Group=chs
-Environment="RUST_LOG=info"
-
-[Install]
-WantedBy=multi-user.target
+Environment=RUST_LOG=debug
+Environment=RUST_BACKTRACE=1
