@@ -82,7 +82,7 @@ impl <'a> ClipState<'a> {
 
     pub fn play(self: &mut Self, show_state: &ShowState, engine: &ClipEngine, mut_state: &mut MutableShowState) -> Option<Instant> {
         let now = Instant::now();
-        while self.playing {
+        while self.playing && self.step < self.steps.len() {
             if self.advance_at > now {
                 return Some(self.advance_at)
             }

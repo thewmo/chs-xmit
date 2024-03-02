@@ -7,7 +7,7 @@
         "yellow": { "h": 64, "s": 255, "v": 255 },
         "green": { "h": 96, "s": 255, "v": 255 },
         "darkgreen": { "h": 128, "s": 255, "v": 64 },
-	"aqua": { "h": 128, "s": 255, "v": 255 },
+    	"aqua": { "h": 128, "s": 255, "v": 255 },
         "blackaqua": { "h": 128, "s": 255, "v": 0 },
         "blue": { "h": 160, "s": 255, "v": 255 },
         "darkblue": { "h": 160, "s": 255, "v": 64 },
@@ -17,12 +17,6 @@
     },
 
     "receivers": [
-        {
-            "name": "bells",
-            "id": 91,
-            "group_name": "pit_front",
-            "led_count": 30
-        },
         {
             "name": "vibe_1_1",
             "id": 130,
@@ -117,6 +111,12 @@
             "led_count": 30
         },
         {
+            "name": "bells",
+            "id": 91,
+            "group_name": "pit_back",
+            "led_count": 30
+        },
+        {
             "name": "vibe_4_1",
             "id": 155,
             "group_name": "pit_back",
@@ -159,54 +159,6 @@
             "led_count": 30
         },
         {
-            "name": "timp_1_1",
-            "id": 88,
-            "group_name": "pit_back",
-            "led_count": 30
-        },
-        {
-            "name": "timp_1_2",
-            "id": 92,
-            "group_name": "pit_back",
-            "led_count": 30
-        },
-        {
-            "name": "timp_2_1",
-            "id": 129,
-            "group_name": "pit_back",
-            "led_count": 30
-        },
-        {
-            "name": "timp_2_2",
-            "id": 86,
-            "group_name": "pit_back",
-            "led_count": 30
-        },
-        {
-            "name": "timp_3_1",
-            "id": 94,
-            "group_name": "pit_back",
-            "led_count": 30
-        },
-        {
-            "name": "timp_3_2",
-            "id": 167,
-            "group_name": "pit_back",
-            "led_count": 30
-        },
-        {
-            "name": "timp_4_1",
-            "id": 162,
-            "group_name": "pit_back",
-            "led_count": 30
-        },
-        {
-            "name": "timp_4_2",
-            "id": 185,
-            "group_name": "pit_back",
-            "led_count": 30
-        },
-        {
             "name": "synth_1",
             "id": 166,
             "group_name": "pit_back",
@@ -215,6 +167,24 @@
         {
             "name": "synth_2",
             "id": 121,
+            "group_name": "pit_back",
+            "led_count": 30
+        },
+        {
+            "name": "synth_3",
+            "id": 88,
+            "group_name": "pit_back",
+            "led_count": 30
+        },
+        {
+            "name": "synth_4",
+            "id": 92,
+            "group_name": "pit_back",
+            "led_count": 30
+        },
+        {
+            "name": "synth_5",
+            "id": 129,
             "group_name": "pit_back",
             "led_count": 30
         },
@@ -499,6 +469,13 @@
             "release": 3300
         },
         {
+            "cue": "C14 - ripple to lighthouse flash",
+            "midi": { "Controller": { "channel": 0, "cc": 75 }},
+            "light": { "Clip": "ripple-c7" },
+            "color": "white",
+            "tempo": 180
+        },
+        {
             "cue": "C7 - basses solo",
             "midi": { "Controller": { "channel": 0, "cc":67 }},
             "light": { "Effect": "Pop" },
@@ -558,78 +535,144 @@
             { "WaitBeats": 0.5 },
             { "MappingOn": { "cue": "bass1", "light": { "Effect": "Pop" }, "color": "white", "release": 250, "targets": [ "bass_1" ] }},
             { "WaitBeats": 0.5 },
-            { "MappingOn": { "cue": "lighthouse", "light": { "Effect": { "DigitalPin": {"pin": 5}}}, "color": "white", "targets": [ "lighthouse" ] }},
-            "End"
+            { "MappingOn": { "cue": "lighthouse", "light": { "Effect": { "DigitalPin": {"pin": 5}}}, "color": "white", "targets": [ "lighthouse" ] }}
         ],
         "swells-front": [
+            { "MappingOn": { "cue": "swells",  "light": { "Effect": { "Wave": { "alternate_hue": 160, "alternate_brightness": 255, "colorspace_range": 64, "colorspace_phase": 64 }}},
+            "color": "darkgreen", "attack": 250, "release": 250, "targets": [ "vibe_1_1" ] }},
+            { "MappingOn": { "cue": "swells",  "light": { "Effect": { "Wave": { "alternate_hue": 160, "alternate_brightness": 255, "colorspace_range": 64, "colorspace_phase": 128 }}},
+            "color": "darkgreen", "attack": 250, "release": 250, "targets": [ "vibe_1_2" ] }},
+            { "MappingOn": { "cue": "swells",  "light": { "Effect": { "Wave": { "alternate_hue": 160, "alternate_brightness": 255, "colorspace_range": 64, "colorspace_phase": 196 }}},
+            "color": "darkgreen", "attack": 250, "release": 250, "targets": [ "vibe_2_1" ] }},
             { "MappingOn": { "cue": "swells",  "light": { "Effect": { "Wave": { "alternate_hue": 160, "alternate_brightness": 255, "colorspace_range": 64, "colorspace_phase": 0 }}},
-                "color": "darkgreen", "attack": 250, "release": 250, "targets": [ "bells" ] }},
-                { "MappingOn": { "cue": "swells",  "light": { "Effect": { "Wave": { "alternate_hue": 160, "alternate_brightness": 255, "colorspace_range": 64, "colorspace_phase": 64 }}},
-                "color": "darkgreen", "attack": 250, "release": 250, "targets": [ "vibe_1_1" ] }},
-                { "MappingOn": { "cue": "swells",  "light": { "Effect": { "Wave": { "alternate_hue": 160, "alternate_brightness": 255, "colorspace_range": 64, "colorspace_phase": 128 }}},
-                "color": "darkgreen", "attack": 250, "release": 250, "targets": [ "vibe_1_2" ] }},
-                { "MappingOn": { "cue": "swells",  "light": { "Effect": { "Wave": { "alternate_hue": 160, "alternate_brightness": 255, "colorspace_range": 64, "colorspace_phase": 196 }}},
-                "color": "darkgreen", "attack": 250, "release": 250, "targets": [ "vibe_2_1" ] }},
-                { "MappingOn": { "cue": "swells",  "light": { "Effect": { "Wave": { "alternate_hue": 160, "alternate_brightness": 255, "colorspace_range": 64, "colorspace_phase": 0 }}},
-                "color": "darkgreen", "attack": 250, "release": 250, "targets": [ "vibe_2_2" ] }},
-                { "MappingOn": { "cue": "swells",  "light": { "Effect": { "Wave": { "alternate_hue": 160, "alternate_brightness": 255, "colorspace_range": 64, "colorspace_phase": 64 }}},
-                "color": "darkgreen", "attack": 250, "release": 250, "targets": [ "marimba_1_1" ] }},
-                { "MappingOn": { "cue": "swells",  "light": { "Effect": { "Wave": { "alternate_hue": 160, "alternate_brightness": 255, "colorspace_range": 64, "colorspace_phase": 128 }}},
-                "color": "darkgreen", "attack": 250, "release": 250, "targets": [ "marimba_1_2" ] }},
-                { "MappingOn": { "cue": "swells",  "light": { "Effect": { "Wave": { "alternate_hue": 160, "alternate_brightness": 255, "colorspace_range": 64, "colorspace_phase": 196 }}},
-                "color": "darkgreen", "attack": 250, "release": 250, "targets": [ "marimba_1_3" ] }},
-                { "MappingOn": { "cue": "swells",  "light": { "Effect": { "Wave": { "alternate_hue": 160, "alternate_brightness": 255, "colorspace_range": 64, "colorspace_phase": 0 }}},
-                "color": "darkgreen", "attack": 250, "release": 250, "targets": [ "marimba_2_1" ] }},
-                { "MappingOn": { "cue": "swells",  "light": { "Effect": { "Wave": { "alternate_hue": 160, "alternate_brightness": 255, "colorspace_range": 64, "colorspace_phase": 64 }}},
-                "color": "darkgreen", "attack": 250, "release": 250, "targets": [ "marimba_2_2" ] }},
-                { "MappingOn": { "cue": "swells",  "light": { "Effect": { "Wave": { "alternate_hue": 160, "alternate_brightness": 255, "colorspace_range": 64, "colorspace_phase": 128 }}},
-                "color": "darkgreen", "attack": 250, "release": 250, "targets": [ "marimba_2_3" ] }},
-                { "MappingOn": { "cue": "swells",  "light": { "Effect": { "Wave": { "alternate_hue": 160, "alternate_brightness": 255, "colorspace_range": 64, "colorspace_phase": 196 }}},
-                "color": "darkgreen", "attack": 250, "release": 250, "targets": [ "marimba_3_1" ] }},
-                { "MappingOn": { "cue": "swells",  "light": { "Effect": { "Wave": { "alternate_hue": 160, "alternate_brightness": 255, "colorspace_range": 64, "colorspace_phase": 0 }}},
-                "color": "darkgreen", "attack": 250, "release": 250, "targets": [ "marimba_3_2" ] }},
-                { "MappingOn": { "cue": "swells",  "light": { "Effect": { "Wave": { "alternate_hue": 160, "alternate_brightness": 255, "colorspace_range": 64, "colorspace_phase": 64 }}},
-                "color": "darkgreen", "attack": 250, "release": 250, "targets": [ "marimba_3_3" ] }},
-                "End"
+            "color": "darkgreen", "attack": 250, "release": 250, "targets": [ "vibe_2_2" ] }},
+            { "MappingOn": { "cue": "swells",  "light": { "Effect": { "Wave": { "alternate_hue": 160, "alternate_brightness": 255, "colorspace_range": 64, "colorspace_phase": 64 }}},
+            "color": "darkgreen", "attack": 250, "release": 250, "targets": [ "marimba_1_1" ] }},
+            { "MappingOn": { "cue": "swells",  "light": { "Effect": { "Wave": { "alternate_hue": 160, "alternate_brightness": 255, "colorspace_range": 64, "colorspace_phase": 128 }}},
+            "color": "darkgreen", "attack": 250, "release": 250, "targets": [ "marimba_1_2" ] }},
+            { "MappingOn": { "cue": "swells",  "light": { "Effect": { "Wave": { "alternate_hue": 160, "alternate_brightness": 255, "colorspace_range": 64, "colorspace_phase": 196 }}},
+            "color": "darkgreen", "attack": 250, "release": 250, "targets": [ "marimba_1_3" ] }},
+            { "MappingOn": { "cue": "swells",  "light": { "Effect": { "Wave": { "alternate_hue": 160, "alternate_brightness": 255, "colorspace_range": 64, "colorspace_phase": 0 }}},
+            "color": "darkgreen", "attack": 250, "release": 250, "targets": [ "marimba_2_1" ] }},
+            { "MappingOn": { "cue": "swells",  "light": { "Effect": { "Wave": { "alternate_hue": 160, "alternate_brightness": 255, "colorspace_range": 64, "colorspace_phase": 64 }}},
+            "color": "darkgreen", "attack": 250, "release": 250, "targets": [ "marimba_2_2" ] }},
+            { "MappingOn": { "cue": "swells",  "light": { "Effect": { "Wave": { "alternate_hue": 160, "alternate_brightness": 255, "colorspace_range": 64, "colorspace_phase": 128 }}},
+            "color": "darkgreen", "attack": 250, "release": 250, "targets": [ "marimba_2_3" ] }},
+            { "MappingOn": { "cue": "swells",  "light": { "Effect": { "Wave": { "alternate_hue": 160, "alternate_brightness": 255, "colorspace_range": 64, "colorspace_phase": 196 }}},
+            "color": "darkgreen", "attack": 250, "release": 250, "targets": [ "marimba_3_1" ] }},
+            { "MappingOn": { "cue": "swells",  "light": { "Effect": { "Wave": { "alternate_hue": 160, "alternate_brightness": 255, "colorspace_range": 64, "colorspace_phase": 0 }}},
+            "color": "darkgreen", "attack": 250, "release": 250, "targets": [ "marimba_3_2" ] }},
+            { "MappingOn": { "cue": "swells",  "light": { "Effect": { "Wave": { "alternate_hue": 160, "alternate_brightness": 255, "colorspace_range": 64, "colorspace_phase": 64 }}},
+            "color": "darkgreen", "attack": 250, "release": 250, "targets": [ "marimba_3_3" ] }}
         ],
         "swells-back": [
             { "MappingOn": { "cue": "swells",  "light": { "Effect": { "Wave": { "alternate_hue": 160, "alternate_brightness": 255, "colorspace_range": 64, "colorspace_phase": 0 }}},
-                "color": "darkgreen", "attack": 250, "release": 250, "targets": [ "vibe_3_1" ] }},
-                { "MappingOn": { "cue": "swells",  "light": { "Effect": { "Wave": { "alternate_hue": 160, "alternate_brightness": 255, "colorspace_range": 64, "colorspace_phase": 64 }}},
-                "color": "darkgreen", "attack": 250, "release": 250, "targets": [ "vibe_3_2" ] }},
-                { "MappingOn": { "cue": "swells",  "light": { "Effect": { "Wave": { "alternate_hue": 160, "alternate_brightness": 255, "colorspace_range": 64, "colorspace_phase": 128 }}},
-                "color": "darkgreen", "attack": 250, "release": 250, "targets": [ "vibe_4_1" ] }},
-                { "MappingOn": { "cue": "swells",  "light": { "Effect": { "Wave": { "alternate_hue": 160, "alternate_brightness": 255, "colorspace_range": 64, "colorspace_phase": 196 }}},
-                "color": "darkgreen", "attack": 250, "release": 250, "targets": [ "vibe_4_2" ] }},
-                { "MappingOn": { "cue": "swells",  "light": { "Effect": { "Wave": { "alternate_hue": 160, "alternate_brightness": 255, "colorspace_range": 64, "colorspace_phase": 0 }}},
-                "color": "darkgreen", "attack": 250, "release": 250, "targets": [ "xylo_1" ] }},
-                { "MappingOn": { "cue": "swells",  "light": { "Effect": { "Wave": { "alternate_hue": 160, "alternate_brightness": 255, "colorspace_range": 64, "colorspace_phase": 64 }}},
-                "color": "darkgreen", "attack": 250, "release": 250, "targets": [ "xylo_2" ] }},
-                { "MappingOn": { "cue": "swells",  "light": { "Effect": { "Wave": { "alternate_hue": 160, "alternate_brightness": 255, "colorspace_range": 64, "colorspace_phase": 128 }}},
-                "color": "darkgreen", "attack": 250, "release": 250, "targets": [ "marimba_4_1" ] }},
-                { "MappingOn": { "cue": "swells",  "light": { "Effect": { "Wave": { "alternate_hue": 160, "alternate_brightness": 255, "colorspace_range": 64, "colorspace_phase": 196 }}},
-                "color": "darkgreen", "attack": 250, "release": 250, "targets": [ "marimba_4_2" ] }},
-                { "MappingOn": { "cue": "swells",  "light": { "Effect": { "Wave": { "alternate_hue": 160, "alternate_brightness": 255, "colorspace_range": 64, "colorspace_phase": 0 }}},
-                "color": "darkgreen", "attack": 250, "release": 250, "targets": [ "marimba_4_3" ] }},
-                { "MappingOn": { "cue": "swells",  "light": { "Effect": { "Wave": { "alternate_hue": 160, "alternate_brightness": 255, "colorspace_range": 64, "colorspace_phase": 64 }}},
-                "color": "darkgreen", "attack": 250, "release": 250, "targets": [ "timp_1_1" ] }},
-                { "MappingOn": { "cue": "swells",  "light": { "Effect": { "Wave": { "alternate_hue": 160, "alternate_brightness": 255, "colorspace_range": 64, "colorspace_phase": 128 }}},
-                "color": "darkgreen", "attack": 250, "release": 250, "targets": [ "timp_2_1" ] }},
-                { "MappingOn": { "cue": "swells",  "light": { "Effect": { "Wave": { "alternate_hue": 160, "alternate_brightness": 255, "colorspace_range": 64, "colorspace_phase": 196 }}},
-                "color": "darkgreen", "attack": 250, "release": 250, "targets": [ "timp_2_2" ] }},
-                { "MappingOn": { "cue": "swells",  "light": { "Effect": { "Wave": { "alternate_hue": 160, "alternate_brightness": 255, "colorspace_range": 64, "colorspace_phase": 0 }}},
-                "color": "darkgreen", "attack": 250, "release": 250, "targets": [ "timp_3_1" ] }},
-                { "MappingOn": { "cue": "swells",  "light": { "Effect": { "Wave": { "alternate_hue": 160, "alternate_brightness": 255, "colorspace_range": 64, "colorspace_phase": 64 }}},
-                "color": "darkgreen", "attack": 250, "release": 250, "targets": [ "timp_3_2" ] }},
-                { "MappingOn": { "cue": "swells",  "light": { "Effect": { "Wave": { "alternate_hue": 160, "alternate_brightness": 255, "colorspace_range": 64, "colorspace_phase": 128 }}},
-                "color": "darkgreen", "attack": 250, "release": 250, "targets": [ "timp_4_1" ] }},
-                { "MappingOn": { "cue": "swells",  "light": { "Effect": { "Wave": { "alternate_hue": 160, "alternate_brightness": 255, "colorspace_range": 64, "colorspace_phase": 196 }}},
-                "color": "darkgreen", "attack": 250, "release": 250, "targets": [ "timp_4_2" ] }},
-                { "MappingOn": { "cue": "swells",  "light": { "Effect": { "Wave": { "alternate_hue": 160, "alternate_brightness": 255, "colorspace_range": 64, "colorspace_phase": 0 }}},
-                "color": "darkgreen", "attack": 250, "release": 250, "targets": [ "synth_1" ] }},
-                { "MappingOn": { "cue": "swells",  "light": { "Effect": { "Wave": { "alternate_hue": 160, "alternate_brightness": 255, "colorspace_range": 64, "colorspace_phase": 64 }}},
-                "color": "darkgreen", "attack": 250, "release": 250, "targets": [ "synth_2" ] }},
-                "End"
+            "color": "darkgreen", "attack": 250, "release": 250, "targets": [ "vibe_3_1" ] }},
+            { "MappingOn": { "cue": "swells",  "light": { "Effect": { "Wave": { "alternate_hue": 160, "alternate_brightness": 255, "colorspace_range": 64, "colorspace_phase": 64 }}},
+            "color": "darkgreen", "attack": 250, "release": 250, "targets": [ "vibe_3_2" ] }},
+            { "MappingOn": { "cue": "swells",  "light": { "Effect": { "Wave": { "alternate_hue": 160, "alternate_brightness": 255, "colorspace_range": 64, "colorspace_phase": 128 }}},
+            "color": "darkgreen", "attack": 250, "release": 250, "targets": [ "bells" ] }},
+            { "MappingOn": { "cue": "swells",  "light": { "Effect": { "Wave": { "alternate_hue": 160, "alternate_brightness": 255, "colorspace_range": 64, "colorspace_phase": 192 }}},
+            "color": "darkgreen", "attack": 250, "release": 250, "targets": [ "vibe_4_1" ] }},
+            { "MappingOn": { "cue": "swells",  "light": { "Effect": { "Wave": { "alternate_hue": 160, "alternate_brightness": 255, "colorspace_range": 64, "colorspace_phase": 0 }}},
+            "color": "darkgreen", "attack": 250, "release": 250, "targets": [ "vibe_4_2" ] }},
+            { "MappingOn": { "cue": "swells",  "light": { "Effect": { "Wave": { "alternate_hue": 160, "alternate_brightness": 255, "colorspace_range": 64, "colorspace_phase": 64 }}},
+            "color": "darkgreen", "attack": 250, "release": 250, "targets": [ "xylo_1" ] }},
+            { "MappingOn": { "cue": "swells",  "light": { "Effect": { "Wave": { "alternate_hue": 160, "alternate_brightness": 255, "colorspace_range": 64, "colorspace_phase": 128 }}},
+            "color": "darkgreen", "attack": 250, "release": 250, "targets": [ "xylo_2" ] }},
+            { "MappingOn": { "cue": "swells",  "light": { "Effect": { "Wave": { "alternate_hue": 160, "alternate_brightness": 255, "colorspace_range": 64, "colorspace_phase": 192 }}},
+            "color": "darkgreen", "attack": 250, "release": 250, "targets": [ "marimba_4_1" ] }},
+            { "MappingOn": { "cue": "swells",  "light": { "Effect": { "Wave": { "alternate_hue": 160, "alternate_brightness": 255, "colorspace_range": 64, "colorspace_phase": 0 }}},
+            "color": "darkgreen", "attack": 250, "release": 250, "targets": [ "marimba_4_2" ] }},
+            { "MappingOn": { "cue": "swells",  "light": { "Effect": { "Wave": { "alternate_hue": 160, "alternate_brightness": 255, "colorspace_range": 64, "colorspace_phase": 64 }}},
+            "color": "darkgreen", "attack": 250, "release": 250, "targets": [ "marimba_4_3" ] }},
+            { "MappingOn": { "cue": "swells",  "light": { "Effect": { "Wave": { "alternate_hue": 160, "alternate_brightness": 255, "colorspace_range": 64, "colorspace_phase": 128 }}},
+            "color": "darkgreen", "attack": 250, "release": 250, "targets": [ "synth_1" ] }},
+            { "MappingOn": { "cue": "swells",  "light": { "Effect": { "Wave": { "alternate_hue": 160, "alternate_brightness": 255, "colorspace_range": 64, "colorspace_phase": 192 }}},
+            "color": "darkgreen", "attack": 250, "release": 250, "targets": [ "synth_2" ] }},
+            { "MappingOn": { "cue": "swells",  "light": { "Effect": { "Wave": { "alternate_hue": 160, "alternate_brightness": 255, "colorspace_range": 64, "colorspace_phase": 0 }}},
+            "color": "darkgreen", "attack": 250, "release": 250, "targets": [ "synth_3" ] }},
+            { "MappingOn": { "cue": "swells",  "light": { "Effect": { "Wave": { "alternate_hue": 160, "alternate_brightness": 255, "colorspace_range": 64, "colorspace_phase": 64 }}},
+            "color": "darkgreen", "attack": 250, "release": 250, "targets": [ "synth_4" ] }},
+            { "MappingOn": { "cue": "swells",  "light": { "Effect": { "Wave": { "alternate_hue": 160, "alternate_brightness": 255, "colorspace_range": 64, "colorspace_phase": 128 }}},
+            "color": "darkgreen", "attack": 250, "release": 250, "targets": [ "synth_5" ] }}           
+        ],
+        "ripple-c7": [
+            // beat 1
+            { "MappingOn": { "cue": "ripple", "light": { "Effect": "Pop" }, "color": "white", "targets": [ "vibe_1_1" ]}},
+            { "WaitBeats": 0.25 },
+            { "MappingOn": { "cue": "ripple", "light": { "Effect": "Pop" }, "color": "white", "targets": [ "vibe_1_2" ]}},
+            { "WaitBeats": 0.25 },
+            { "MappingOn": { "cue": "ripple", "light": { "Effect": "Pop" }, "color": "white", "targets": [ "vibe_3_1" ]}},
+            { "WaitBeats": 0.25 },
+            { "MappingOn": { "cue": "ripple", "light": { "Effect": "Pop" }, "color": "white", "targets": [ "vibe_2_1" ]}},
+            { "WaitBeats": 0.25 },
+
+            // beat 2
+            { "MappingOn": { "cue": "ripple", "light": { "Effect": "Pop" }, "color": "white", "targets": [ "screen_1" ]}},
+            { "MappingOn": { "cue": "ripple", "light": { "Effect": "Pop" }, "color": "white", "targets": [ "vibe_3_2" ]}},
+            { "WaitBeats": 0.25 },
+            { "MappingOn": { "cue": "ripple", "light": { "Effect": "Pop" }, "color": "white", "targets": [ "vibe_2_2" ]}},
+            { "WaitBeats": 0.25 },
+            { "MappingOn": { "cue": "ripple", "light": { "Effect": "Pop" }, "color": "white", "targets": [ "bells" ]}},
+            { "WaitBeats": 0.25 },
+            { "MappingOn": { "cue": "ripple", "light": { "Effect": "Pop" }, "color": "white", "targets": [ "marimba_1_1" ]}},
+            { "WaitBeats": 0.25 },
+
+            // beat 3
+            { "MappingOn": { "cue": "ripple", "light": { "Effect": "Pop" }, "color": "white", "targets": [ "screen_2" ]}},
+            { "MappingOn": { "cue": "ripple", "light": { "Effect": "Pop" }, "color": "white", "targets": [ "vibe_4_1" ]}},
+            { "WaitBeats": 0.25 },
+            { "MappingOn": { "cue": "ripple", "light": { "Effect": "Pop" }, "color": "white", "targets": [ "marimba_1_2" ]}},
+            { "WaitBeats": 0.25 },
+            { "MappingOn": { "cue": "ripple", "light": { "Effect": "Pop" }, "color": "white", "targets": [ "vibe_4_2" ]}},
+            { "WaitBeats": 0.25 },
+            { "MappingOn": { "cue": "ripple", "light": { "Effect": "Pop" }, "color": "white", "targets": [ "marimba_1_3" ]}},
+            { "WaitBeats": 0.25 },
+
+            // beat 4
+            { "MappingOn": { "cue": "ripple", "light": { "Effect": "Pop" }, "color": "white", "targets": [ "screen_3" ]}},
+            { "MappingOn": { "cue": "ripple", "light": { "Effect": "Pop" }, "color": "white", "targets": [ "xylo_1" ]}},
+            { "WaitBeats": 0.25 },
+            { "MappingOn": { "cue": "ripple", "light": { "Effect": "Pop" }, "color": "white", "targets": [ "marimba_2_1" ]}},
+            { "WaitBeats": 0.25 },
+            { "MappingOn": { "cue": "ripple", "light": { "Effect": "Pop" }, "color": "white", "targets": [ "xylo_2" ]}},
+            { "WaitBeats": 0.25 },
+            { "MappingOn": { "cue": "ripple", "light": { "Effect": "Pop" }, "color": "white", "targets": [ "marimba_2_2" ]}},
+            { "WaitBeats": 0.25 },
+
+            // beat 5
+            { "MappingOn": { "cue": "ripple", "light": { "Effect": "Pop" }, "color": "white", "targets": [ "marimba_4_1" ]}},
+            { "WaitBeats": 0.25 },
+            { "MappingOn": { "cue": "ripple", "light": { "Effect": "Pop" }, "color": "white", "targets": [ "marimba_2_3" ]}},
+            { "WaitBeats": 0.25 },
+            { "MappingOn": { "cue": "ripple", "light": { "Effect": "Pop" }, "color": "white", "targets": [ "marimba_4_2" ]}},
+            { "WaitBeats": 0.25 },
+            { "MappingOn": { "cue": "ripple", "light": { "Effect": "Pop" }, "color": "white", "targets": [ "marimba_3_1" ]}},
+            { "WaitBeats": 0.25 },
+
+            // beat 6
+            { "MappingOn": { "cue": "ripple", "light": { "Effect": "Pop" }, "color": "white", "targets": [ "marimba_4_3" ]}},
+            { "WaitBeats": 0.25 },
+            { "MappingOn": { "cue": "ripple", "light": { "Effect": "Pop" }, "color": "white", "targets": [ "marimba_3_2" ]}},
+            { "WaitBeats": 0.25 },
+            { "MappingOn": { "cue": "ripple", "light": { "Effect": "Pop" }, "color": "white", "targets": [ "synth_1" ]}},
+            { "WaitBeats": 0.25 },
+            { "MappingOn": { "cue": "ripple", "light": { "Effect": "Pop" }, "color": "white", "targets": [ "marimba_3_3" ]}},
+            { "WaitBeats": 0.25 },
+
+            // beat 7
+            { "MappingOn": { "cue": "ripple", "light": { "Effect": "Pop" }, "color": "white", "targets": [ "synth_2" ]}},
+            { "WaitBeats": 0.25 },
+            { "MappingOn": { "cue": "ripple", "light": { "Effect": "Pop" }, "color": "white", "targets": [ "synth_3" ]}},
+            { "WaitBeats": 0.25 },
+            { "MappingOn": { "cue": "ripple", "light": { "Effect": "Pop" }, "color": "white", "targets": [ "synth_4" ]}},
+            { "WaitBeats": 0.25 },
+            { "MappingOn": { "cue": "ripple", "light": { "Effect": "Pop" }, "color": "white", "targets": [ "synth_5" ]}},
+            { "WaitBeats": 0.25 },
+
+            // beat 8
+            { "MappingOn": { "cue": "ripple", "light": { "Effect": { "DigitalPin": { "pin": 5 }} }, "color": "white", "targets": [ "lighthouse" ]}}
         ]
     }
 }

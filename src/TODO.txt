@@ -1,6 +1,8 @@
-- add a test MIDI signal/effect outside the show
-- add a reset/reload MIDI signal via config
-- configure systemd to launch on boot and hotplug
-- configure systemd to send a SIGHUP when the show file changes
 - add auto-configuration of pads via sysex on startup
-- figure out if there is any way to light pads via outbound MIDI
+
+- implement ripple clip
+- piezo sensor for bass 4 receiver(?)
+- lights for screen outline
+- tenor receiver?
+- repair batteries
+- create a safe shutdown switch for the pi
