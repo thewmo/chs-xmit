@@ -43,8 +43,10 @@ pub enum Effect {
     Strobe { division: u8 }, 
     /// just chase length, reverse is meaningless for the bidi chase effect
     BidiChase { chase_length: u8 },
-    /// options mean the same as for regular chase
-    OneShotChase { chase_length: u8, reverse: bool },
+    /// options mean the same as for regular chase, except for beat_denominator
+    /// which divides the tempo to determine how long it takes the head of the
+    /// chase to move across the face of one receiver/LED array
+    OneShotChase { chase_length: u8, reverse: bool, beat_denominator: u8 },
     BidiOneShotChase { chase_length: u8 },
     /// 1/stride LEDs will be lit, tempo_division is quarters (1), eights(2) etc.
     Sparkle { stride: u8, tempo_division: u8 },

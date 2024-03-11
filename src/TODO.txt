@@ -1,8 +1,7 @@
 - add auto-configuration of pads via sysex on startup
 
-- implement ripple clip
-- piezo sensor for bass 4 receiver(?)
-- lights for screen outline
-- tenor receiver?
+- piezo sensor for bass 4 and 2 receiver(?)
 - repair batteries
 - create a safe shutdown switch for the pi
+- smoother fade-outs?
+- sequence at end of opener, A11 half bright

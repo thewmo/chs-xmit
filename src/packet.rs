@@ -82,9 +82,11 @@ impl Effect {
             Effect::BidiChase { chase_length } => {
                 packet.param1 = *chase_length;
             },
-            Effect::OneShotChase { chase_length, reverse } => {
+            Effect::OneShotChase { chase_length, reverse, beat_denominator } => {
                 packet.param1 = *chase_length;
                 packet.param2 = if *reverse { 1 } else { 0 };
+                // note that one shot chase overrides sustain
+                packet.sustain = *beat_denominator;
             },
             Effect::BidiOneShotChase { chase_length } => {
                 packet.param1 = *chase_length;

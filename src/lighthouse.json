@@ -2,6 +2,7 @@
     "colors": {
         "red": { "h": 0, "s": 255, "v": 255 },
         "white": { "h": 0, "s": 0, "v": 255 },
+        "halfwhite": { "h": 0, "s": 0, "v": 48 },
         "dimwhite": { "h": 0, "s": 0, "v": 32 },
         "orange": { "h": 32, "s": 255, "v": 255 },
         "yellow": { "h": 64, "s": 255, "v": 255 },
@@ -213,25 +214,25 @@
         },
         {
             "name": "screen_1",
-            "id": 254, // TBD
+            "id": 109,
             "group_name": "screens",
-            "led_count": 100
+            "led_count": 288
         },
         {
             "name": "screen_2",
-            "id": 254, // TBD
+            "id": 92, 
             "group_name": "screens",
-            "led_count": 36
+            "led_count": 137
         },
         {
             "name": "screen_3",
-            "id": 254, // TBD
+            "id": 88, 
             "group_name": "screens",
-            "led_count": 18
+            "led_count": 192
         },
         {
             "name": "lighthouse",
-            "id": 87,
+            "id": 167,
             "led_count": 1,
 	        "group_name": "lighthouse_group" // unique name here to make sure lighthouse doesn't join some other group
         },
@@ -309,60 +310,83 @@
         {
             "cue": "A3 - lighthouse",
             "midi": { "Controller": { "channel": 0, "cc": 12 }},
-            "light": { "Effect": { "DigitalPin": { "pin": 5 }} },
+            "light": { "Effect": { "DigitalPin": { "pin": 6 }} },
             "color": "white",
+            "sustain": 1500,
+            "one_shot": true,
             "targets": [ "lighthouse" ]
         },
         {
-            "cue": "A4 - 6-count ripple",
+            "cue": "A4 - 8-count ripple",
             "midi": { "Controller": { "channel": 0, "cc": 13 }},
-            "light": { "Clip": "opener-ripple-a4" },
-            "tempo": 175,
-            "color": "white"
-        },
-        {
-            "cue": "A5 - all fade",
-            "midi": { "Controller": { "channel": 0, "cc": 14 }},
-            "light": { "Effect": "Pop" },
+            "light": { "Clip": "opener-ripple-8-count"},
+            "tempo": 170,
             "color": "white",
-            "release": 1430
+            "one_shot": true
         },
         {
-            "cue": "A6 - all hit",
+            "cue": "A5 - 6-count ripple",
+            "midi": { "Controller": { "channel": 0, "cc": 14 }},
+            "light": { "Clip": "opener-ripple-6-count" },
+            "tempo": 170,
+            "color": "white",
+            "one_shot": true
+        },
+        {
+            "cue": "A6 - all fade",
             "midi": { "Controller": { "channel": 0, "cc": 15 }},
             "light": { "Effect": "Pop" },
             "color": "white",
-            "release": 250
+            "release": 1430,
+            "targets": [ "pit_front", "pit_back", "battery", "screens" ]
         },
         {
-            "cue": "A7 - basses white",
+            "cue": "A7 - all hit",
             "midi": { "Controller": { "channel": 0, "cc": 16 }},
+            "light": { "Effect": "Pop" },
+            "color": "white",
+            "release": 250,
+            "targets": [ "pit_front", "pit_back", "battery", "screens" ]
+        },
+        {
+            "cue": "A8 - all hit",
+            "midi": { "Controller": { "channel": 0, "cc": 17 }},
+            "light": { "Effect": "Pop" },
+            "color": "white",
+            "release": 250,
+            "targets": [ "pit_front", "pit_back", "battery", "screens" ]
+        },
+        {
+            "cue": "A9 - basses white",
+            "midi": { "Controller": { "channel": 0, "cc": 20 }},
             "light": { "Effect": "Pop" },
             "color": "white",
             "release": 250,
             "targets": [ "bass_1", "bass_2", "bass_3", "bass_4" ]
         },
         {
-            "cue": "A8 - snare and tenor hit",
-            "midi": { "Controller": { "channel": 0, "cc": 17 }},
+            "cue": "A10 - snare and tenor hit",
+            "midi": { "Controller": { "channel": 0, "cc": 21 }},
             "light": { "Effect": "Pop" },
             "color": "white",
             "release": 250,
             "targets": [ "snare_1", "snare_2", "tenor" ]
         },
         {
-            "cue": "A9 - all hit",
-            "midi": { "Controller": { "channel": 0, "cc": 20 }},
+            "cue": "A11 - all hit dim",
+            "midi": { "Controller": { "channel": 0, "cc": 22 }},
             "light": { "Effect": "Pop" },
-            "color": "white",
-            "release": 250
+            "color": "halfwhite",
+            "release": 250,
+            "targets": [ "pit_front", "pit_back", "battery", "screens" ]
         },
         {
-            "cue": "A10 - all fade",
-            "midi": { "Controller": { "channel": 0, "cc": 21 }},
+            "cue": "A12 - all fade",
+            "midi": { "Controller": { "channel": 0, "cc": 23 }},
             "light": { "Effect": "Pop" },
             "color": "white",
-            "release": 1430
+            "release": 1430,
+            "targets": [ "pit_front", "pit_back", "battery", "screens" ]
         },
 
         //
@@ -427,7 +451,7 @@
         {
             "cue": "C1 - lighthouse",
             "midi": { "Controller": { "channel": 0, "cc": 60 }},
-            "light": { "Effect": { "DigitalPin": { "pin": 5 }} },
+            "light": { "Effect": { "DigitalPin": { "pin": 6 }} },
             "color": "white",
             "targets": [ "lighthouse" ]
         },
@@ -506,17 +530,16 @@
         {
             "cue": "C10 - lighthouse",
             "midi": { "Controller": { "channel": 0, "cc": 71 }},
-            "light": { "Effect": { "DigitalPin": { "pin": 5 }} },
+            "light": { "Effect": { "DigitalPin": { "pin": 6 }} },
             "color": "white",
             "targets": [ "lighthouse" ]
         },
         {
-            "cue": "C11 - lights all chase",
+            "cue": "C11 - circle chase",
             "midi": { "Controller": { "channel": 0, "cc":72 }},
-            "light": { "Effect": { "Chase": { "chase_length": 15, "reverse": false }} },
+            "light": { "Clip": "circle-chase" },
             "color": "white",
-            "release": 250,
-    	    "targets": [ "pit_front", "pit_back", "battery" ]
+            "tempo": 45 // 1/4 the actual tempo of 180
         },
         {
             "cue": "C12 - all long fade",
@@ -529,7 +552,7 @@
         {
             "cue": "C12 - lighthouse",
             "midi": { "Controller": { "channel": 0, "cc":73 }},
-            "light": { "Effect": { "DigitalPin": { "pin": 5 }} },
+            "light": { "Effect": { "DigitalPin": { "pin": 6 }} },
             "color": "white",
             "release": 1780,
             "targets": [ "lighthouse" ]
@@ -537,7 +560,26 @@
     ],
 
     "clips": {
-        "opener-ripple-a4": [
+        "opener-ripple-8-count": [
+            { "MappingOn": { "cue": "lighthouse", "light": { "Effect": { "DigitalPin": {"pin": 6}}}, "color": "white", "targets": [ "lighthouse" ] }},
+            { "MappingOn": { "cue": "snare2", "light": { "Effect": "Pop" }, "color": "white", "release": 250, "targets": [ "bass_1", "snare_2" ] }},
+            { "WaitBeats": 0.5 },
+            { "MappingOn": { "cue": "snare1", "light": { "Effect": "Pop" }, "color": "white", "release": 250, "targets": [ "bass_2", "snare_1" ] }},
+            { "WaitBeats": 0.5 },
+            { "MappingOn": { "cue": "tenor", "light": { "Effect": "Pop" }, "color": "white", "release": 250, "targets": [ "bass_3", "tenor" ] }},
+            { "WaitBeats": 0.5 },
+            { "MappingOn": { "cue": "bass 4", "light": { "Effect": "Pop" }, "color": "white", "release": 250, "targets": [ "bass_4" ] }},
+            { "WaitBeats": 0.5 },
+            { "MappingOff": 1 },
+            { "MappingOff": 3 },
+            { "MappingOff": 5 },
+            { "MappingOff": 7 },
+            { "MappingOn": { "cue": "mallory", "light": { "Effect": "Pop" }, "color": "white", "release": 250, "targets": [ "marimba_1_1", "marimba_1_2", "marimba_1_3" ] }},
+            { "WaitBeats": 6 },
+            "Stop"
+        ],
+
+        "opener-ripple-6-count": [
             { "MappingOn": { "cue": "tenor", "light": { "Effect": "Pop" }, "color": "white", "release": 250, "targets": [ "tenor" ] }},
             { "WaitBeats": 0.5 },
             { "MappingOn": { "cue": "snare1", "light": { "Effect": "Pop" }, "color": "white", "release": 250, "targets": [ "snare_1" ] }},
@@ -550,7 +592,9 @@
             { "WaitBeats": 0.5 },
             { "MappingOn": { "cue": "bass1", "light": { "Effect": "Pop" }, "color": "white", "release": 250, "targets": [ "bass_1" ] }},
             { "WaitBeats": 0.5 },
-            { "MappingOn": { "cue": "lighthouse", "light": { "Effect": { "DigitalPin": {"pin": 5}}}, "color": "white", "targets": [ "lighthouse" ] }}
+            { "MappingOn": { "cue": "lighthouse", "light": { "Effect": { "DigitalPin": {"pin": 6}}}, "color": "white", "targets": [ "lighthouse" ] }},
+            { "WaitBeats": 2 },
+            "Stop"
         ],
         "swells-front": [
             { "MappingOn": { "cue": "swells",  "light": { "Effect": { "Wave": { "alternate_hue": 160, "alternate_brightness": 255, "colorspace_range": 64, "colorspace_phase": 64 }}},
@@ -624,7 +668,7 @@
             { "WaitBeats": 0.25 },
 
             // beat 2
-            { "MappingOn": { "cue": "ripple", "light": { "Effect": "Pop" }, "color": "white", "targets": [ "screen_1" ]}},
+//            { "MappingOn": { "cue": "ripple", "light": { "Effect": "Pop" }, "color": "white", "targets": [ "screen_1" ]}},
             { "MappingOn": { "cue": "ripple", "light": { "Effect": "Pop" }, "color": "white", "targets": [ "vibe_3_2" ]}},
             { "WaitBeats": 0.25 },
             { "MappingOn": { "cue": "ripple", "light": { "Effect": "Pop" }, "color": "white", "targets": [ "vibe_2_2" ]}},
@@ -635,7 +679,7 @@
             { "WaitBeats": 0.25 },
 
             // beat 3
-            { "MappingOn": { "cue": "ripple", "light": { "Effect": "Pop" }, "color": "white", "targets": [ "screen_2" ]}},
+//            { "MappingOn": { "cue": "ripple", "light": { "Effect": "Pop" }, "color": "white", "targets": [ "screen_2" ]}},
             { "MappingOn": { "cue": "ripple", "light": { "Effect": "Pop" }, "color": "white", "targets": [ "vibe_4_1" ]}},
             { "WaitBeats": 0.25 },
             { "MappingOn": { "cue": "ripple", "light": { "Effect": "Pop" }, "color": "white", "targets": [ "marimba_1_2" ]}},
@@ -646,7 +690,7 @@
             { "WaitBeats": 0.25 },
 
             // beat 4
-            { "MappingOn": { "cue": "ripple", "light": { "Effect": "Pop" }, "color": "white", "targets": [ "screen_3" ]}},
+//            { "MappingOn": { "cue": "ripple", "light": { "Effect": "Pop" }, "color": "white", "targets": [ "screen_3" ]}},
             { "MappingOn": { "cue": "ripple", "light": { "Effect": "Pop" }, "color": "white", "targets": [ "xylo_1" ]}},
             { "WaitBeats": 0.25 },
             { "MappingOn": { "cue": "ripple", "light": { "Effect": "Pop" }, "color": "white", "targets": [ "marimba_2_1" ]}},
@@ -687,9 +731,70 @@
             { "WaitBeats": 0.25 },
 
             // beat 8, lighthouse one beat then all off
-            { "MappingOn": { "cue": "ripple", "light": { "Effect": { "DigitalPin": { "pin": 5 }} }, "color": "white", "targets": [ "lighthouse" ]}},
+            { "MappingOn": { "cue": "ripple", "light": { "Effect": { "DigitalPin": { "pin": 6 }} }, "color": "white", "targets": [ "lighthouse" ]}},
             { "WaitBeats": 1.0 },
             "Stop"
+        ],
+
+        "circle-chase": [
+            { "MappingOn": { "cue": "drumchase", "light": { "Effect": { "Chase": { "chase_length": 15, "reverse": false }}}, "color": "white", "targets": [ "battery" ]}},
+            { "MappingOn": { "cue": "screenchase", "light": { "Effect": { "Chase": { "chase_length": 30, "reverse": false }}}, "color": "white", "targets": [ "screens" ]}},
+            { "MappingOn": { "cue": "chase", "light": { "Effect": { "OneShotChase": { "chase_length": 90, "reverse": true, "beat_denominator": 13 }}}, "one_shot": true, "color": "white", "targets": [ "vibe_1_1" ]}},
+            { "WaitBeats": 0.0769 },
+            { "MappingOn": { "cue": "chase", "light": { "Effect": { "OneShotChase": { "chase_length": 90, "reverse": true, "beat_denominator": 13 }}}, "one_shot": true, "color": "white", "targets": [ "vibe_1_2" ]}},
+            { "WaitBeats": 0.0769 },
+            { "MappingOn": { "cue": "chase", "light": { "Effect": { "OneShotChase": { "chase_length": 90, "reverse": true, "beat_denominator": 13 }}}, "one_shot": true, "color": "white", "targets": [ "vibe_2_1" ]}},
+            { "WaitBeats": 0.0769 },
+            { "MappingOn": { "cue": "chase", "light": { "Effect": { "OneShotChase": { "chase_length": 90, "reverse": true, "beat_denominator": 13 }}}, "one_shot": true, "color": "white", "targets": [ "vibe_2_2" ]}},
+            { "WaitBeats": 0.0769 },
+            { "MappingOn": { "cue": "chase", "light": { "Effect": { "OneShotChase": { "chase_length": 90, "reverse": true, "beat_denominator": 13 }}}, "one_shot": true, "color": "white", "targets": [ "marimba_1_1" ]}},
+            { "WaitBeats": 0.0769 },
+            { "MappingOn": { "cue": "chase", "light": { "Effect": { "OneShotChase": { "chase_length": 90, "reverse": true, "beat_denominator": 13 }}}, "one_shot": true, "color": "white", "targets": [ "marimba_1_2" ]}},
+            { "WaitBeats": 0.0769 },
+            { "MappingOn": { "cue": "chase", "light": { "Effect": { "OneShotChase": { "chase_length": 90, "reverse": true, "beat_denominator": 13 }}}, "one_shot": true, "color": "white", "targets": [ "marimba_1_3" ]}},
+            { "WaitBeats": 0.0769 },
+            { "MappingOn": { "cue": "chase", "light": { "Effect": { "OneShotChase": { "chase_length": 90, "reverse": true, "beat_denominator": 13 }}}, "one_shot": true, "color": "white", "targets": [ "marimba_2_1" ]}},
+            { "WaitBeats": 0.0769 },
+            { "MappingOn": { "cue": "chase", "light": { "Effect": { "OneShotChase": { "chase_length": 90, "reverse": true, "beat_denominator": 13 }}}, "one_shot": true, "color": "white", "targets": [ "marimba_2_2" ]}},
+            { "WaitBeats": 0.0769 },
+            { "MappingOn": { "cue": "chase", "light": { "Effect": { "OneShotChase": { "chase_length": 90, "reverse": true, "beat_denominator": 13 }}}, "one_shot": true, "color": "white", "targets": [ "marimba_2_3" ]}},
+            { "WaitBeats": 0.0769 },
+            { "MappingOn": { "cue": "chase", "light": { "Effect": { "OneShotChase": { "chase_length": 90, "reverse": true, "beat_denominator": 13 }}}, "one_shot": true, "color": "white", "targets": [ "marimba_3_1" ]}},
+            { "WaitBeats": 0.0769 },
+            { "MappingOn": { "cue": "chase", "light": { "Effect": { "OneShotChase": { "chase_length": 90, "reverse": true, "beat_denominator": 13 }}}, "one_shot": true, "color": "white", "targets": [ "marimba_3_2" ]}},
+            { "WaitBeats": 0.0769 },
+            { "MappingOn": { "cue": "chase", "light": { "Effect": { "OneShotChase": { "chase_length": 90, "reverse": true, "beat_denominator": 13 }}}, "one_shot": true, "color": "white", "targets": [ "marimba_3_3" ]}},
+            { "WaitBeats": 0.0769 },
+            { "MappingOn": { "cue": "chase", "light": { "Effect": { "OneShotChase": { "chase_length": 90, "reverse": false, "beat_denominator": 15 }}}, "one_shot": true, "color": "white", "targets": [ "synth_5" ]}},
+            { "WaitBeats": 0.0667 },
+            { "MappingOn": { "cue": "chase", "light": { "Effect": { "OneShotChase": { "chase_length": 90, "reverse": false, "beat_denominator": 15 }}}, "one_shot": true, "color": "white", "targets": [ "synth_4" ]}},
+            { "WaitBeats": 0.0667 },
+            { "MappingOn": { "cue": "chase", "light": { "Effect": { "OneShotChase": { "chase_length": 90, "reverse": false, "beat_denominator": 15 }}}, "one_shot": true, "color": "white", "targets": [ "synth_3" ]}},
+            { "WaitBeats": 0.0667 },
+            { "MappingOn": { "cue": "chase", "light": { "Effect": { "OneShotChase": { "chase_length": 90, "reverse": false, "beat_denominator": 15 }}}, "one_shot": true, "color": "white", "targets": [ "synth_2" ]}},
+            { "WaitBeats": 0.0667 },
+            { "MappingOn": { "cue": "chase", "light": { "Effect": { "OneShotChase": { "chase_length": 90, "reverse": false, "beat_denominator": 15 }}}, "one_shot": true, "color": "white", "targets": [ "synth_1" ]}},
+            { "WaitBeats": 0.0667 },
+            { "MappingOn": { "cue": "chase", "light": { "Effect": { "OneShotChase": { "chase_length": 90, "reverse": false, "beat_denominator": 15 }}}, "one_shot": true, "color": "white", "targets": [ "marimba_4_3" ]}},
+            { "WaitBeats": 0.0667 },
+            { "MappingOn": { "cue": "chase", "light": { "Effect": { "OneShotChase": { "chase_length": 90, "reverse": false, "beat_denominator": 15 }}}, "one_shot": true, "color": "white", "targets": [ "marimba_4_2" ]}},
+            { "WaitBeats": 0.0667 },
+            { "MappingOn": { "cue": "chase", "light": { "Effect": { "OneShotChase": { "chase_length": 90, "reverse": false, "beat_denominator": 15 }}}, "one_shot": true, "color": "white", "targets": [ "marimba_4_1" ]}},
+            { "WaitBeats": 0.0667 },
+            { "MappingOn": { "cue": "chase", "light": { "Effect": { "OneShotChase": { "chase_length": 90, "reverse": false, "beat_denominator": 15 }}}, "one_shot": true, "color": "white", "targets": [ "xylo_2" ]}},
+            { "WaitBeats": 0.0667 },
+            { "MappingOn": { "cue": "chase", "light": { "Effect": { "OneShotChase": { "chase_length": 90, "reverse": false, "beat_denominator": 15 }}}, "one_shot": true, "color": "white", "targets": [ "xylo_1" ]}},
+            { "WaitBeats": 0.0667 },
+            { "MappingOn": { "cue": "chase", "light": { "Effect": { "OneShotChase": { "chase_length": 90, "reverse": false, "beat_denominator": 15 }}}, "one_shot": true, "color": "white", "targets": [ "vibe_4_2" ]}},
+            { "WaitBeats": 0.0667 },
+            { "MappingOn": { "cue": "chase", "light": { "Effect": { "OneShotChase": { "chase_length": 90, "reverse": false, "beat_denominator": 15 }}}, "one_shot": true, "color": "white", "targets": [ "vibe_4_1" ]}},
+            { "WaitBeats": 0.0667 },
+            { "MappingOn": { "cue": "chase", "light": { "Effect": { "OneShotChase": { "chase_length": 90, "reverse": false, "beat_denominator": 15 }}}, "one_shot": true, "color": "white", "targets": [ "bells" ]}},
+            { "WaitBeats": 0.0667 },
+            { "MappingOn": { "cue": "chase", "light": { "Effect": { "OneShotChase": { "chase_length": 90, "reverse": false, "beat_denominator": 15 }}}, "one_shot": true, "color": "white", "targets": [ "vibe_3_2" ]}},
+            { "WaitBeats": 0.0667 },
+            { "MappingOn": { "cue": "chase", "light": { "Effect": { "OneShotChase": { "chase_length": 90, "reverse": false, "beat_denominator": 15 }}}, "one_shot": true, "color": "white", "targets": [ "vibe_3_1" ]}},
+            { "Loop": 2 }
         ]
     }
 }
