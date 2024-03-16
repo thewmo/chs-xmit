@@ -65,6 +65,9 @@ pub enum Effect {
     Rainbow { secondary_hue: u8 },
     Twinkle { twinkle_brightness: u8, twinkle_factor: f32 },
     DigitalPin { pin: u8 },
+    QueueMovement { steps: u16, rpm: u8, accel: u8, return_to_home: bool },
+    Move { steps: u16, rpm: u8, accel: u8, return_to_home: bool },
+    SetHome,
 }
 
 

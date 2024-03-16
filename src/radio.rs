@@ -27,6 +27,7 @@ use crate::packet::Packet;
 //const SPI_DEVICE: &str = "/dev/spidev0.1";
 
 // rpi rf69 bonnet connects reset to GPIO25
+//const RESET_PIN: u64 = 424; // pi 5
 const RESET_PIN: u64 = 25;
 
 const BIT_RATE: u32 = 250_000; // 250 kbps
@@ -72,6 +73,7 @@ impl Radio {
         // out of reset
         let reset_pin = SysfsPin::new(RESET_PIN);
         reset_pin.export()?;
+
         // the first time we run after a reboot, the export takes some time te be
         // effective - otherwise a permissions error will result from the call below.
         // so we have to sleep a little bit. See https://github.com/rust-embedded/rust-sysfs-gpio/issues/5

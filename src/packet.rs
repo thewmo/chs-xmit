@@ -33,6 +33,9 @@ pub enum EffectId {
     Rainbow = 16,
     Twinkle = 17,
     DigitalPin = 18,
+    QueueMovement = 19,
+    Move = 20,
+    SetHome = 21,
 }
 
 impl Effect {
@@ -56,6 +59,9 @@ impl Effect {
             Effect::Rainbow {..} => EffectId::Rainbow,
             Effect::Twinkle {..} => EffectId::Twinkle,
             Effect::DigitalPin {..} => EffectId::DigitalPin,
+            Effect::QueueMovement {..} => EffectId::QueueMovement,
+            Effect::Move {..} => EffectId::Move,
+            Effect::SetHome => EffectId::SetHome,
         }
     }
 
@@ -125,7 +131,21 @@ impl Effect {
             },
             Effect::DigitalPin { pin } => {
                 packet.param1 = *pin;
-            }
+            },
+            Effect::QueueMovement { steps, rpm, accel, return_to_home } => {
+                packet.param1 = (*steps >> 8) as u8;
+                packet.param2 = *steps as u8;
+                packet.attack = *accel;
+                packet.tempo = *rpm;
+                packet.release = if *return_to_home  { 1 } else { 0 };
+            }, 
+            Effect::Move { steps, rpm, accel, return_to_home } => {
+                packet.param1 = (*steps >> 8) as u8;
+                packet.param2 = *steps as u8;
+                packet.attack = *accel;
+                packet.tempo = *rpm;
+                packet.release = if *return_to_home  { 1 } else { 0 };
+            },
             _ => {}
         }
     }
