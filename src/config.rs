@@ -13,6 +13,12 @@ pub struct ConfigFile {
     /// the path to the SPI device to open in the filesystem
     pub spi_device: String,
 
+    /// the path to the GPIO device to open
+    pub gpio_device: String,
+
+    /// the line of the reset pin on the gpio device
+    pub reset_line: u32,
+
     /// the frequency to use expressed as a long
     pub frequency: u32,
 

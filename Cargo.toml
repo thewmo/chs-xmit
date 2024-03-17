@@ -10,7 +10,7 @@ authors = ["Matthew Moore <matt@moore-fam.com>"]
 anyhow = "1.0.79"
 clap = { version="4.4.16", features = [ "derive" ] }
 env_logger = "0.11.0"
-linux-embedded-hal = "0.3.2"
+linux-embedded-hal = { version = "0.3.2", features = [ "gpio-cdev" ] }
 log = "0.4.20"
 midir = "0.9.1"
 midly = "0.5.3"

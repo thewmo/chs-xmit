@@ -5,8 +5,9 @@ use rfm69::{Rfm69, registers::{Registers, Modulation, ModulationShaping,
     PacketDc, PacketFiltering, InterPacketRxDelay, RxBw, RxBwFsk,
     Pa13dBm1, Pa13dBm2 }};
 use linux_embedded_hal::spidev::{SpiModeFlags, SpidevOptions};
-use linux_embedded_hal::sysfs_gpio::Direction;
-use linux_embedded_hal::{Spidev, SysfsPin};
+use linux_embedded_hal::Spidev;
+use linux_embedded_hal::gpio_cdev::{Chip, LineRequestFlags};
+
 use std::time::Duration;
 use std::fmt::{Display,Formatter};
 
@@ -28,7 +29,7 @@ use crate::packet::Packet;
 
 // rpi rf69 bonnet connects reset to GPIO25
 //const RESET_PIN: u64 = 424; // pi 5
-const RESET_PIN: u64 = 25;
+//const RESET_PIN: u64 = 25;
 
 const BIT_RATE: u32 = 250_000; // 250 kbps
 const FREQ_DEVIATION: u32 = 250_000; // 250 kHz
@@ -71,22 +72,15 @@ impl Radio {
         // the rfm69 bonnet pulls the reset pin high by
         // default, it needs to be pulled low to bring the radio
         // out of reset
-        let reset_pin = SysfsPin::new(RESET_PIN);
-        reset_pin.export()?;
-
-        // the first time we run after a reboot, the export takes some time te be
-        // effective - otherwise a permissions error will result from the call below.
-        // so we have to sleep a little bit. See https://github.com/rust-embedded/rust-sysfs-gpio/issues/5
-        sleep(Duration::from_millis(100));
-
-        // this will configure the pin as output and high (placing the radio in reset)
-        reset_pin.set_direction(Direction::High)?;
+        let mut gpio_dev = Chip::new(&config.gpio_device)?;
+        let reset_line = gpio_dev.get_line(config.reset_line)?;
+        // set default value of high to put tho radio in reset
+        let reset_handle = reset_line.request(LineRequestFlags::OUTPUT, 1, "chs-lights")?;
         let settle_time = Duration::from_millis(config.settle_time_millis.unwrap_or(DEFAULT_SETTLE_TIME));
-        // let things stabilize for 10ms
         sleep(settle_time);
-        // turn on the radio by taking reset low
-        reset_pin.set_value(0)?;
-        // and again before trying to configure the radio
+        // turn on the radio by pulling reset low
+        reset_handle.set_value(0)?;
+        // sleep briefly again before trying to configure the radio
         sleep(settle_time);
 
         let mut spi = Spidev::open(&config.spi_device)?;
@@ -144,6 +138,7 @@ impl Radio {
         debug!("Sending packet: {:?}, marshalled: {:?}", packet, marshalled);
         let result = self.radio.borrow_mut().send(marshalled.as_slice());
         self.post_tx_hook()?;
+        // increment the packet id for next time
         self.packet_id.set(self.packet_id.get() + Wrapping(1u8));
         result.map_err(From::from)
     }
@@ -175,6 +170,7 @@ impl Radio {
 #[derive(Debug)]
 pub enum RadioError {   
     SysfsError(linux_embedded_hal::sysfs_gpio::Error),
+    GpioError(linux_embedded_hal::gpio_cdev::Error),
     Rfm69Error(Rfm69Error),
     SpiError(std::io::Error),
     IllegalPower
@@ -212,6 +208,12 @@ impl From<linux_embedded_hal::sysfs_gpio::Error> for RadioError {
     }
 }
 
+impl From<linux_embedded_hal::gpio_cdev::Error> for RadioError {
+    fn from(err: linux_embedded_hal::gpio_cdev::Error) -> RadioError {
+        RadioError::GpioError(err)
+    }
+}
+
 impl From<std::io::Error> for RadioError {
     fn from(err: std::io::Error) -> RadioError {
         RadioError::SpiError(err)
@@ -222,6 +224,7 @@ impl Display for RadioError {
     fn fmt(self: &Self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match &self {
             RadioError::SysfsError(e) => write!(f, "SysfsError: {:?}", e),
+            RadioError::GpioError(e) => write!(f, "GpioError: {:?}", e),
             RadioError::Rfm69Error(e) => write!(f, "Rfm69Error: {:?}", e),
             RadioError::SpiError(e) => write!(f, "SpiError: {:?}", e),
             RadioError::IllegalPower => write!(f, "Unsupported power value specified")
