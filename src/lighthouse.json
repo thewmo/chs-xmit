@@ -451,7 +451,7 @@
         {
             "cue": "C1 - lighthouse",
             "midi": { "Controller": { "channel": 0, "cc": 60 }},
-            "light": { "Effect": { "DigitalPin": { "pin": 6 }} },
+            "light": { "Effect": { "PinAndSpin": { "pin": 5, "rpm": 30, "accel": 150, "clockwise": false }}},
             "color": "white",
             "targets": [ "lighthouse" ]
         },

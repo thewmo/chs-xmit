@@ -33,9 +33,8 @@ pub enum EffectId {
     Rainbow = 16,
     Twinkle = 17,
     DigitalPin = 18,
-    QueueMovement = 19,
-    Move = 20,
-    SetHome = 21,
+    PinAndSpin = 19,
+    PopAndSpin = 20,
 }
 
 impl Effect {
@@ -59,9 +58,8 @@ impl Effect {
             Effect::Rainbow {..} => EffectId::Rainbow,
             Effect::Twinkle {..} => EffectId::Twinkle,
             Effect::DigitalPin {..} => EffectId::DigitalPin,
-            Effect::QueueMovement {..} => EffectId::QueueMovement,
-            Effect::Move {..} => EffectId::Move,
-            Effect::SetHome => EffectId::SetHome,
+            Effect::PinAndSpin {..} => EffectId::PinAndSpin,
+            Effect::PopAndSpin {..} => EffectId::PopAndSpin,
         }
     }
 
@@ -132,20 +130,16 @@ impl Effect {
             Effect::DigitalPin { pin } => {
                 packet.param1 = *pin;
             },
-            Effect::QueueMovement { steps, rpm, accel, return_to_home } => {
-                packet.param1 = (*steps >> 8) as u8;
-                packet.param2 = *steps as u8;
+            Effect::PinAndSpin { pin, rpm, accel, clockwise } => {
+                packet.param1 = *pin;
+                packet.param2 = if *clockwise { 0 } else { 1 };
                 packet.attack = *accel;
                 packet.tempo = *rpm;
-                packet.release = if *return_to_home  { 1 } else { 0 };
-            }, 
-            Effect::Move { steps, rpm, accel, return_to_home } => {
-                packet.param1 = (*steps >> 8) as u8;
-                packet.param2 = *steps as u8;
-                packet.attack = *accel;
-                packet.tempo = *rpm;
-                packet.release = if *return_to_home  { 1 } else { 0 };
             },
+            Effect::PopAndSpin { rpm,  clockwise } => {
+                packet.param2 = if *clockwise { 0 } else { 1 };
+                packet.tempo = *rpm;
+            }
             _ => {}
         }
     }
