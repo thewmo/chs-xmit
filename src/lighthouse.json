@@ -233,7 +233,7 @@
         {
             "name": "lighthouse",
             "id": 167,
-            "led_count": 1,
+            "led_count": 80,
 	        "group_name": "lighthouse_group" // unique name here to make sure lighthouse doesn't join some other group
         },
 
@@ -310,7 +310,7 @@
         {
             "cue": "A3 - lighthouse",
             "midi": { "Controller": { "channel": 0, "cc": 12 }},
-            "light": { "Effect": { "DigitalPin": { "pin": 6 }} },
+            "light": { "Effect": { "DigitalPin": { "pin": 5 }} },
             "color": "white",
             "sustain": 1500,
             "one_shot": true,
@@ -530,7 +530,7 @@
         {
             "cue": "C10 - lighthouse",
             "midi": { "Controller": { "channel": 0, "cc": 71 }},
-            "light": { "Effect": { "DigitalPin": { "pin": 6 }} },
+            "light": { "Effect": { "DigitalPin": { "pin": 5 }} },
             "color": "white",
             "targets": [ "lighthouse" ]
         },
@@ -552,7 +552,7 @@
         {
             "cue": "C12 - lighthouse",
             "midi": { "Controller": { "channel": 0, "cc":73 }},
-            "light": { "Effect": { "DigitalPin": { "pin": 6 }} },
+            "light": { "Effect": { "DigitalPin": { "pin": 5 }} },
             "color": "white",
             "release": 1780,
             "targets": [ "lighthouse" ]
@@ -561,7 +561,7 @@
 
     "clips": {
         "opener-ripple-8-count": [
-            { "MappingOn": { "cue": "lighthouse", "light": { "Effect": { "DigitalPin": {"pin": 6}}}, "color": "white", "targets": [ "lighthouse" ] }},
+            { "MappingOn": { "cue": "lighthouse", "light": { "Effect": { "DigitalPin": {"pin": 5}}}, "color": "white", "targets": [ "lighthouse" ] }},
             { "MappingOn": { "cue": "snare2", "light": { "Effect": "Pop" }, "color": "white", "release": 250, "targets": [ "bass_1", "snare_2" ] }},
             { "WaitBeats": 0.5 },
             { "MappingOn": { "cue": "snare1", "light": { "Effect": "Pop" }, "color": "white", "release": 250, "targets": [ "bass_2", "snare_1" ] }},
@@ -592,7 +592,7 @@
             { "WaitBeats": 0.5 },
             { "MappingOn": { "cue": "bass1", "light": { "Effect": "Pop" }, "color": "white", "release": 250, "targets": [ "bass_1" ] }},
             { "WaitBeats": 0.5 },
-            { "MappingOn": { "cue": "lighthouse", "light": { "Effect": { "DigitalPin": {"pin": 6}}}, "color": "white", "targets": [ "lighthouse" ] }},
+            { "MappingOn": { "cue": "lighthouse", "light": { "Effect": { "DigitalPin": {"pin": 5}}}, "color": "white", "targets": [ "lighthouse" ] }},
             { "WaitBeats": 2 },
             "Stop"
         ],
@@ -731,7 +731,7 @@
             { "WaitBeats": 0.25 },
 
             // beat 8, lighthouse one beat then all off
-            { "MappingOn": { "cue": "ripple", "light": { "Effect": { "DigitalPin": { "pin": 6 }} }, "color": "white", "targets": [ "lighthouse" ]}},
+            { "MappingOn": { "cue": "ripple", "light": { "Effect": { "DigitalPin": { "pin": 5 }} }, "color": "white", "targets": [ "lighthouse" ]}},
             { "WaitBeats": 1.0 },
             "Stop"
         ],
