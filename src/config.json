@@ -1,6 +1,6 @@
 {
     "spi_device": "/dev/spidev0.1",
-    "gpio_device": "/dev/gpiochip4",
+    "gpio_device": "/dev/gpiochip0",
     "reset_line": 25,
     "frequency": 427000000,
     "transmitter_id": 1,
