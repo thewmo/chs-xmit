@@ -2,6 +2,7 @@ use std::path::PathBuf;
 use std::fs::File;
 use std::io;
 use clap::{Parser, command};
+use midir::MidiInputConnection;
 use packet::{Packet,PacketPayload,ShowPacket,EffectId};
 use log::{debug,info,warn,error};
 use crossbeam_channel::bounded;
@@ -71,16 +72,13 @@ fn main() -> anyhow::Result<()> {
         .context("Error parsing configuration")?;
     info!("Loaded configuration: {:?}", config);
 
-    // initialize our midi and radio libraries/interfaces
-    info!("Initializing MIDI...");
-    let (midi_in, midi_out) = midi::midi_init(&config)?;
-
     info!("Initializing radio...");
     let mut radio = Radio::init(&config)?;
 
     // handle some command line options that do some work and then terminate early
     match cli {
         Cli { enumerate_midi: true, ..} => {
+            let (midi_in, _) = midi::midi_init(&config)?;
             midi::midi_enum(&midi_in);
             return Ok(())
         },
@@ -97,61 +95,67 @@ fn main() -> anyhow::Result<()> {
         bounded(config.channel_buf_depth.unwrap_or(DEFAULT_BUFFER_SIZE));
 
     let midi_tx = tx.clone();
+    
+    let mut midi_in_connection: Option<MidiInputConnection<()>> = None;
+    // if midi is configured, open the midi device and forward data to the midi channel
+    if let Some(port) = &config.midi_port {
+        info!("Initializing MIDI...");
+        let (midi_in, midi_out) = midi::midi_init(&config)?;
 
-    if let Some(ports) = midi::find_ports(&midi_in, &midi_out, &config.midi_port) {
-        let midi_in_connection = midi_in.connect(&ports.0, "chs-lights-in", 
-                    move | ts, midi_bytes, _ | 
-                        { midi_tx.send(DirectorMessage::MidiMessage { ts, buf: midi_bytes.to_owned() }).unwrap(); }, ()).unwrap();
+        if let Some(ports) = midi::find_ports(&midi_in, &midi_out, &port) {
+            midi_in_connection = Some(midi_in.connect(&ports.0, "chs-lights-in", 
+                        move | ts, midi_bytes, _ | 
+                            { midi_tx.send(DirectorMessage::MidiMessage { ts, buf: midi_bytes.to_owned() }).unwrap(); }, ()).unwrap());
+        } else {
+            return Err(anyhow!("No MIDI port matches prefix: {:?}", config.midi_port))
+        }
+    }
+    
+    // create a director and give it the receive channel, the config, and the radio
+    // note the director takes ownership of the config, radio, and receiver
+    let mut director = Director::new(config, radio, rx);
+
+    // launch the show in its own thread
+    let join_handle = thread::spawn(move || { 
+        if let Err(e) = director.run_show() { 
+            error!("Show terminated early with error: {}", e);
+        } 
+    });
         
-        // create a director and give it the receive channel, the config, and the radio
-        // note the director takes ownership of the config, radio, and receiver
-        let mut director = Director::new(config, radio, rx);
+    // listen for signals and forward them to the director
+    let sigs = vec![
+        // initiate shutdown
+        SIGINT, 
+        SIGTERM,
+        // reload show from JSON
+        SIGHUP,
+    ];
+    
+    let mut signals = SignalsInfo::<WithOrigin>::new(&sigs)?;
 
-        // launch the show in its own thread
-        let join_handle = thread::spawn(move || { 
-            if let Err(e) = director.run_show() { 
-                error!("Show terminated early with error: {}", e);
-            } 
-        });
-
-        // listen for signals and forward them to the director
-        let sigs = vec![
-            // initiate shutdown
-            SIGINT, 
-            SIGTERM,
-            // reload show from JSON
-            SIGHUP,
-        ];
-        
-        let mut signals = SignalsInfo::<WithOrigin>::new(&sigs)?;
-
-        if !join_handle.is_finished() {
-            for info in &mut signals {
-                debug!("In signal handling loop");
-                match info.signal {
-                    SIGINT | SIGTERM => {
-                        tx.send(DirectorMessage::Shutdown)?;
-                        break;
-                    },
-                    SIGHUP => { tx.send(DirectorMessage::Reload)?; },
-                    x => { warn!("Unexpected signal: {}", x); }
-                }
+    if !join_handle.is_finished() {
+        for info in &mut signals {
+            debug!("In signal handling loop");
+            match info.signal {
+                SIGINT | SIGTERM => {
+                    tx.send(DirectorMessage::Shutdown)?;
+                    break;
+                },
+                SIGHUP => { tx.send(DirectorMessage::Reload)?; },
+                x => { warn!("Unexpected signal: {}", x); }
             }
         }
-        debug!("Exited signal handling loop");
-
-
-        // note the connection must be kept alive until the show is over, 
-        // otherwise midirs will close the connection. The explicit drop
-        // prevents midi_connection from being dropped prematurely
-        drop(midi_in_connection);
-
-        // join the show thread before shutdown
-        let _ = join_handle.join();
-        Ok(())
-    } else {
-        Err(anyhow!("No MIDI port matches prefix: {:?}", config.midi_port))
     }
+    debug!("Exited signal handling loop");
+
+    // note the connection must be kept alive until the show is over, 
+    // otherwise midirs will close the connection. The explicit drop
+    // prevents midi_connection from being dropped prematurely
+    drop(midi_in_connection);
+
+    // join the show thread before shutdown
+    let _ = join_handle.join();
+    Ok(())
 }
 
 fn all_on(radio: &mut Radio) {

@@ -40,8 +40,9 @@ pub struct ConfigFile {
     pub midi_client_name: String,
 
     /// the midi port to attach to for events. the string
-    /// provided will be matched against the port name as a prefix
-    pub midi_port: String,
+    /// provided will be matched against the port name as a prefix.
+    /// omit altogether to disable midi functionality
+    pub midi_port: Option<String>,
 
     /// the midi channel number to care about for out-of-show controls
     /// eg, sustain, test, reset
@@ -62,7 +63,12 @@ pub struct ConfigFile {
 
     /// once we are sending lights-out packets, how long to
     /// allow to elapse between packets (1/freq)
-    pub lights_out_period: f32
+    pub lights_out_period: f32,
+
+    /// if populated, the name of a clip in the 
+    /// show to automatically start playing on startup
+    /// (makes the transmitter usable without midi input)
+    pub autoplay_clip: Option<String>
 
 }
 

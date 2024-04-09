@@ -336,7 +336,7 @@ impl<'a,'b> ShowState<'a,'b> {
 
     /// Send control packets to all the receivers telling them
     /// what group they're in and how many leds they have
-    pub fn configure_receivers(self: &Self) -> Result<(), RadioError> {
+    pub fn initialize(self: &Self) -> Result<(), RadioError> {
         // reset everybody because receiving a 
         self.radio.send(&GLOBAL_RESET_PACKET)?;
         for receiver in self.show.receivers.iter() {
@@ -364,6 +364,11 @@ impl<'a,'b> ShowState<'a,'b> {
             recipients: &vec![],
             payload: PacketPayload::Control(Command::Reset)
         })?;
+
+        // if the configuration specifies a clip to launch, launch that clip
+        if let Some(autoplay_clip) = &self.config.autoplay_clip {
+            let _ = self.clip_engine.start_clip(&autoplay_clip, None, 120.0);
+        }
 
         Ok(())
     }

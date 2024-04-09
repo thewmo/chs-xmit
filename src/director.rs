@@ -73,7 +73,7 @@ impl Director {
         let show: ShowDefinition = serde_json::from_reader(StripComments::new(file)).context("Could not parse file")?;
         let state = ShowState::new(&show, &self.radio, &self.config).context("Could not validate show structure")?;
         let mut mutable_state = state.create_mutable_state().context("Could not validate show structure")?;
-        state.configure_receivers()?;
+        state.initialize()?;
 
         info!("reset receivers and show state");
         let mut timeout = Duration::ZERO;
