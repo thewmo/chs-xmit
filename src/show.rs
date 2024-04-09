@@ -65,8 +65,8 @@ pub enum Effect {
     Rainbow { secondary_hue: u8 },
     Twinkle { twinkle_brightness: u8, twinkle_factor: f32 },
     DigitalPin { pin: u8 },
-    PinAndSpin { pin: u8, rpm: u8, accel: u8, clockwise: bool },
-    PopAndSpin { rpm: u8, clockwise: bool}
+    PinAndSpin { pin: u8, rpm: u8 },
+    PopAndSpin { rpm: u8, }
 }
 
 

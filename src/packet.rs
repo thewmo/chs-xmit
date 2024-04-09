@@ -130,14 +130,11 @@ impl Effect {
             Effect::DigitalPin { pin } => {
                 packet.param1 = *pin;
             },
-            Effect::PinAndSpin { pin, rpm, accel, clockwise } => {
+            Effect::PinAndSpin { pin, rpm } => {
                 packet.param1 = *pin;
-                packet.param2 = if *clockwise { 0 } else { 1 };
-                packet.attack = *accel;
                 packet.tempo = *rpm;
             },
-            Effect::PopAndSpin { rpm,  clockwise } => {
-                packet.param2 = if *clockwise { 0 } else { 1 };
+            Effect::PopAndSpin { rpm } => {
                 packet.tempo = *rpm;
             }
             _ => {}
