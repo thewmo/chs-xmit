@@ -7,6 +7,7 @@
         "white": { "h": 0, "s": 0, "v": 255 },
         "halfwhite": { "h": 0, "s": 0, "v": 48 },
         "dimwhite": { "h": 0, "s": 0, "v": 32 },
+	"mostlywhite": { "h": 0, "s": 0, "v": 64 },
         "orange": { "h": 32, "s": 255, "v": 255 },
         "yellow": { "h": 64, "s": 255, "v": 255 },
         "green": { "h": 96, "s": 255, "v": 255 },
@@ -89,7 +90,7 @@
         },
         {
             "name": "marimba_3_2",
-            "id": 204,
+            "id": 184,
             "group_name": "pit_front",
             "led_count": 30
         },
@@ -246,7 +247,7 @@
 
         {
             "name": "snare_1",
-            "id": 95,
+            "id": 200,
             "group_name": "battery",
             "led_count": 60
         },
@@ -389,7 +390,7 @@
             "light": { "Effect": "Pop" },
             "color": "white",
             "release": 1430,
-            "targets": [ "pit_front", "pit_back", "battery", "screens" ]
+            "targets": [ "battery" ]
         },
 	{
 	    "cue": "A12 - lighthouse",
@@ -463,8 +464,8 @@
         {
             "cue": "C1 - lighthouse",
             "midi": { "Controller": { "channel": 0, "cc": 60 }},
-            "light": { "Effect": { "PopAndSpin": { "rpm": 30 }}},
-            "color": "red",
+            "light": { "Effect": { "PinAndSpin": { "pin": 5,  "rpm": 30 }}},
+            "color": "white",
             "targets": [ "lighthouse" ]
         },
         {
@@ -566,7 +567,9 @@
             "midi": { "Controller": { "channel": 0, "cc":71 }},
             "light": { "Effect": "Pop" },
             "color": "white",
-            "release": 950,
+	    "one_shot": true,
+	    "sustain": 10,
+            "release": 1600,
             "targets": [ "pit_front", "pit_back", "battery" ]
         },
         {
@@ -614,11 +617,11 @@
 	{
 	    "cue": "F2 - Stars",
 	    "midi": { "Controller": { "channel": 0, "cc": 81 }},
-	    "light": { "Effect": {"Twinkle": { "twinkle_brightness": 32, "twinkle_factor": 0.25}}},
-	    "color": "white",
+	    "light": { "Effect": {"Twinkle": { "twinkle_brightness": 16, "twinkle_factor": 0.25}}},
+	    "color": "mostlywhite",
 	    "attack": 500,
 	    "release": 500,
-	    "tempo": 60,
+	    "tempo": 45,
 	    "targets": [ "stars" ]
 	},
 	{   "cue": "F3 - Stars Chaos",
@@ -678,9 +681,9 @@
             { "WaitBeats": 0.5 },
             { "MappingOn": { "cue": "snare1", "light": { "Effect": "Pop" }, "color": "white", "release": 250, "targets": [ "snare_1" ] }},
             { "WaitBeats": 0.5 },
-            { "MappingOn": { "cue": "snare2", "light": { "Effect": "Pop" }, "color": "white", "release": 250, "targets": [ "snare_2" ] }},
+            { "MappingOn": { "cue": "snare2", "light": { "Effect": "Pop" }, "color": "white", "release": 250, "targets": [ "snare_2", "bass_4" ] }},
             { "WaitBeats": 0.5 },
-            { "MappingOn": { "cue": "bass4", "light": { "Effect": "Pop" }, "color": "white", "release": 250, "targets": [ "bass_4" ] }},
+            { "MappingOn": { "cue": "bass4", "light": { "Effect": "Pop" }, "color": "white", "release": 250, "targets": [ "bass_3" ] }},
             { "WaitBeats": 0.5 },
             { "MappingOn": { "cue": "bass2", "light": { "Effect": "Pop" }, "color": "white", "release": 250, "targets": [ "bass_2" ] }},
             { "WaitBeats": 0.5 },
@@ -840,7 +843,7 @@
             { "WaitBeats": 4 },
             { "MappingOn": { "cue": "eli", "light": { "Effect": "Pop" }, "color": "red", "targets": [ "snare_1" ] }},
             { "WaitBeats": 4 },
-            { "MappingOn": { "cue": "lighthouse spin red", "light": { "Effect": { "PopAndSpin": { "rpm": 30 }}}, "color": "red", "release": 1000, "targets": [ "lighthouse" ] }},
+            { "MappingOn": { "cue": "lighthouse spin white", "light": { "Effect": { "PinAndSpin": { "pin": 5, "rpm": 30 }}}, "color": "white", "release": 1000, "targets": [ "lighthouse" ] }},
             { "MappingOn": { "cue": "battery chaos", "light": { "Effect": { "Firecrackers": { "delay_quantization": 128, "delay_multiplier": 10}}}, "color": "red", "release": 500, "targets": [ "battery" ] }},
             { "WaitBeats": 4 },
             { "MappingOn": { "cue": "pit chaos", "light": { "Effect": { "Firecrackers": { "delay_quantization": 128, "delay_multiplier": 10}}}, "color": "red", "release": 250, "targets": [ "pit_front", "pit_back" ] }}, 
