@@ -206,7 +206,7 @@
         },
         {
             "name": "stars_2",
-            "id": 161,
+            "id": 88,
             "group_name": "stars",
             "led_count": 36
         },
@@ -230,7 +230,7 @@
         },
         {
             "name": "screen_3",
-            "id": 88, 
+            "id": 200, 
             "group_name": "screens",
             "led_count": 192
         },
@@ -259,7 +259,7 @@
         },
         {
             "name": "tenor",
-            "id": 148,
+            "id": 143,
             "group_name": "battery",
             "led_count": 90
         },
@@ -536,7 +536,7 @@
             "midi": { "Controller": { "channel": 0, "cc":67 }},
             "light": { "Effect": { "DigitalPin": { "pin":5 }} },
             "color": "white",
-	    "release": 5000,
+	    "release": 250,
 	    "targets": [ "lighthouse" ]
 	},
         {
@@ -611,7 +611,7 @@
             "midi": { "Controller": { "channel": 0, "cc":80 }},
             "light": { "Effect": { "DigitalPin": { "pin":5 }} },
             "color": "white",
-	    "release": 5000,
+	    "release": 10,
 	    "targets": [ "lighthouse" ]
 	},
 	{
